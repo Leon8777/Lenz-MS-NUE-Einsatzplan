@@ -1,0 +1,119 @@
+Screens:
+  SplashScreen:
+    Properties:
+      Fill: =RGBA(248, 250, 252, 1)
+      OnVisible: =Set(varSplashStart, false);Set(varSplashStart, true)
+    Children:
+      - Image2:
+          Control: Image
+          Properties:
+            BorderColor: =RGBA(0, 0, 0, 0)
+            BorderStyle: =BorderStyle.None
+            BorderThickness: =2
+            DisabledBorderColor: =RGBA(0, 0, 0, 0)
+            DisabledFill: =RGBA(0, 0, 0, 0)
+            FocusedBorderThickness: =4
+            Height: =Parent.Height
+            HoverBorderColor: =RGBA(0, 0, 0, 0)
+            HoverFill: =RGBA(0, 0, 0, 0)
+            Image: =Kaiserburg_Nürnberg
+            ImagePosition: =ImagePosition.Fill
+            PressedBorderColor: =RGBA(0, 0, 0, 0)
+            PressedFill: =RGBA(0, 0, 0, 0)
+            Width: =Parent.Width
+      - rec_BgOverlay:
+          Control: Rectangle
+          Properties:
+            Fill: =RGBA(15, 23, 42, 0.55)
+            Height: =Parent.Height
+            Width: =Parent.Width
+      - grp_SplashRoot:
+          Control: GroupContainer
+          Variant: AutoLayout
+          Properties:
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Center
+            LayoutDirection: =LayoutDirection.Vertical
+            LayoutGap: =24
+            LayoutJustifyContent: =LayoutJustifyContent.Center
+            Width: =Parent.Width
+          Children:
+            - grp_LogoBox:
+                Control: GroupContainer
+                Variant: ManualLayout
+                Properties:
+                  AlignInContainer: =AlignInContainer.Center
+                  DropShadow: =DropShadow.Bold
+                  FillPortions: =0
+                  Height: =180
+                  Width: =300
+                Children:
+                  - rec_LogoShadow:
+                      Control: Rectangle
+                      Properties:
+                        Fill: =RGBA(0, 0, 0, 0.35)
+                        Height: =180
+                        Width: =300
+                        X: =6
+                        Y: =10
+                  - rec_LogoFill:
+                      Control: Rectangle
+                      Properties:
+                        Fill: =RGBA(0, 110, 199, 1)
+                        Height: =180
+                        Width: =300
+                  - rec_LogoAccent:
+                      Control: Rectangle
+                      Properties:
+                        Fill: =RGBA(136, 125, 117, 1)
+                        Height: =24
+                        Width: =300
+                        Y: =156
+                  - lbl_LogoOverline:
+                      Control: Label
+                      Properties:
+                        Align: =Align.Center
+                        Color: =RGBA(255, 255, 255, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Bold
+                        Height: =20
+                        Size: =11
+                        Text: ="MICROSOFT NÜRNBERG"
+                        Width: =300
+                        Y: =28
+                  - lbl_LogoText:
+                      Control: Label
+                      Properties:
+                        Align: =Align.Center
+                        Color: =RGBA(255, 255, 255, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Bold
+                        Height: =88
+                        Size: =34
+                        Text: ="Einsatzplan"
+                        Width: =300
+                        Y: =59
+            - spn_Loading:
+                Control: Spinner
+                Properties:
+                  Appearance: ='Spinner.Appearance'.Primary
+                  BasePaletteColor: =RGBA(255, 255, 255, 1)
+                  Height: =150
+                  SpinnerSize: ='Spinner.SpinnerSize'.Large
+                  Width: =150
+            - lbl_Loading:
+                Control: Label
+                Properties:
+                  Align: =Align.Center
+                  AutoHeight: =true
+                  Color: =RGBA(226, 232, 240, 1)
+                  Font: =Font.'Open Sans'
+                  FontWeight: =FontWeight.Semibold
+                  Text: ="Wird geladen..."
+      - tmr_Splash:
+          Control: Timer
+          Properties:
+            Duration: =2000
+            OnTimerEnd: =Set(varSplashStart, false);Navigate(If(varIsAdmin, AdminScreen, UserScreen), ScreenTransition.Fade)
+            Start: =varSplashStart
+            Visible: =false

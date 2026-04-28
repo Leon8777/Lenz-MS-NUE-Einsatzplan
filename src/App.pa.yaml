@@ -1,0 +1,85 @@
+App:
+  Properties:
+    Formulas: |-
+      =// adesso Corporate Colors (Blau-Variante)
+      ColorPrimaryBlue = RGBA(0, 75, 141, 1);
+      ColorPrimaryBlueDark = RGBA(0, 55, 110, 1);
+      ColorBlack = RGBA(0, 0, 0, 1);
+      ColorTextGrey = RGBA(80, 80, 80, 1);
+      ColorBackgroundLight = RGBA(242, 242, 242, 1);
+      ColorBorderGrey = RGBA(220, 220, 220, 1);
+      ColorWhite = RGBA(255, 255, 255, 1);
+      ColorSuccessGreen = RGBA(46, 160, 67, 1);
+      // Responsive breakpoint
+      IsWideScreen = App.Width >= 768
+    OnStart: |-
+      =Set(
+          varCurrentUser,
+          User()
+      );
+      // Admin-Whitelist: hier alle E-Mail-Adressen eintragen, die Admin-Rechte haben.
+      // Die Adressen werden case-insensitive verglichen, pflege sie dennoch bevorzugt in Kleinbuchstaben.
+      Set(
+          varAdminEmails,
+          [
+              "Leon.Popp@adesso.de",
+              "Laurent.Fearon@adesso.de",
+              "Rene.Engler@adesso.de",
+              "Andreas.Querndt@adesso.de",
+              "Markus.Lochner@adesso.de",
+              "Jennifer.Latuski@adesso.de",
+              "Yannick.Stoecklein@adesso.de",
+              "Maximilian.Meier@adesso.de",
+              "Christoph.Fritsch@adesso.de"
+          ]
+      );
+      Set(
+          varIsAdmin,
+          !IsBlank(
+              LookUp(
+                  varAdminEmails,
+                  Lower(Value) = Lower(varCurrentUser.Email)
+              )
+          )
+      );
+      Set(
+          varFormMode,
+          "New"
+      );
+      Set(
+          varSelectedItem,
+          Blank()
+      );
+      Set(
+          varShowDeleteDialog,
+          false
+      );
+      Set(
+          varItemToDelete,
+          Blank()
+      );
+      Set(
+          varValidationMsg,
+          ""
+      );
+      // Defaults fuer UserScreen-Kennzahlen, damit sie im Design View und vor Navigate nicht leer sind.
+      Set(
+          varMeineAuslastung,
+          0
+      );
+      Set(
+          varMeineFreieKapa,
+          100
+      );
+      ClearCollect(
+          colMeineAktiv,
+          Blank()
+      );
+      // M365-Group-ID der "Microsoft Nuernberg"-Gruppe.
+      // Members dieser Gruppe sind die Basis fuer den AdminScreen "Freie Kapazitaeten".
+      Set(
+          varMSNUEGroupId,
+          "efa1fe67-dd01-4e88-96e0-44be42a46139"
+      )
+    StartScreen: =SplashScreen
+    Theme: =PowerAppsTheme

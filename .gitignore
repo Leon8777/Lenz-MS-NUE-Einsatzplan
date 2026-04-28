@@ -1,0 +1,11 @@
+# Claude Code user-specific settings (kein Team-Sharing)
+.claude/settings.local.json
+
+# OS-Junk
+Thumbs.db
+.DS_Store
+
+# Editor
+.vscode/
+*.swp
+*~

@@ -1,0 +1,942 @@
+Screens:
+  AdminScreen:
+    Properties:
+      Fill: =RGBA(248, 250, 252, 1)
+      OnVisible: |-
+        =// Kapa-Regel: ein Eintrag ist aktiv, wenn Laufzeit (Enddatum) >= Heute.
+        // Future-Bookings (Startdatum > Heute) zaehlen ebenfalls als verplante Kapazitaet.
+        // Gruppierung erfolgt auf der SP-Spalte 'Person' (Person or Group).
+        // Aktive Eintraege mit Person-Infos + Auslastung als 0..100 Prozent
+        // Schritt 1: Server-seitiger Filter (delegierbar)
+        ClearCollect(colLaufendeEintraege, Filter('MS-NUE-Einsatzplan', Laufzeit >= Today()));
+        // Schritt 2: Startdatum-Check clientseitig (DateDiff ignoriert Time-Component)
+        ClearCollect(colAktiveEintraege, Filter(colLaufendeEintraege, IsBlank(Startdatum) || DateDiff(Today(), Startdatum, TimeUnit.Days) <= 0));
+        ClearCollect(
+            colAktiveFlat,
+            AddColumns(
+                colAktiveEintraege,
+                PersonName, Person.DisplayName,
+                PersonEmail, Lower(Person.Email),
+                AuslastungPct, Auslastung * 100,
+                AuslastungVorherPct, Coalesce(AuslastungVorher, 0) * 100
+            )
+        );
+        // M365-Group-Members als Basis fuer die MA-Liste
+        // (zeigt also auch MA, die noch keinen Eintrag in der SP-Liste haben)
+        ClearCollect(
+            colGroupMembers,
+            AddColumns(
+                Office365Groups.ListGroupMembers(varMSNUEGroupId).value,
+                PersonName, displayName,
+                PersonEmail, Lower(mail),
+                PersonSurname, Coalesce(surname, displayName)
+            )
+        );
+        ClearCollect(
+            colAlleUser,
+            Filter(
+                colGroupMembers,
+                !IsBlank(PersonEmail) And Len(PersonEmail) > 0
+            )
+        );
+        // Aktuelle Auslastung pro MA (nur aus aktiven Eintraegen aggregiert)
+        // GesamtVorher = Summe der zuletzt gespeicherten Vorgaengerwerte
+        // StandModified = juengste Aenderung an einem Eintrag des MA
+        ClearCollect(
+            colAuslastungProMA,
+            AddColumns(
+                GroupBy(colAktiveFlat, PersonEmail, PersonName, Eintraege),
+                GesamtAuslastung, RoundDown(Sum(Eintraege, AuslastungPct), 0),
+                FreieKapa, 100 - RoundDown(Sum(Eintraege, AuslastungPct), 0),
+                GesamtVorher, RoundDown(Sum(Eintraege, AuslastungVorherPct), 0),
+                FreieKapaVorher, 100 - RoundDown(Sum(Eintraege, AuslastungVorherPct), 0),
+                StandModified, Max(Eintraege, Modified)
+            )
+        );
+        // Freie Kapazitaeten: JEDER MA aus der Liste. Hat er keine aktiven Eintraege,
+        // gilt er als 0 % ausgelastet und hat 100 % frei. Gefiltert wird auf
+        // GesamtAuslastung < 100 (d.h. Auslastung ist nicht bei 100 %).
+        // Beispiel: 40 % ausgelastet -> 60 % FreieKapa -> erscheint in der Liste.
+        ClearCollect(
+            colFreieKapa,
+            Filter(
+                ForAll(
+                    colAlleUser As u,
+                    With(
+                        {
+                            aus: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtAuslastung), 0),
+                            vorher: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtVorher), 0),
+                            stand: LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, StandModified)
+                        },
+                        {
+                            PersonName: u.PersonName,
+                            PersonEmail: u.PersonEmail,
+                            PersonSurname: u.PersonSurname,
+                            GesamtAuslastung: aus,
+                            FreieKapa: 100 - aus,
+                            GesamtVorher: vorher,
+                            FreieKapaVorher: 100 - vorher,
+                            StandModified: stand
+                        }
+                    )
+                ),
+                GesamtAuslastung < 100
+            )
+        );
+        // Alle Kapazitaeten: JEDER MA aus der Liste (auch 100 % ausgelastet).
+        ClearCollect(
+            colAlleKapa,
+            ForAll(
+                colAlleUser As u,
+                With(
+                    {
+                        aus: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtAuslastung), 0),
+                        vorher: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtVorher), 0),
+                        stand: LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, StandModified)
+                    },
+                    {
+                        PersonName: u.PersonName,
+                        PersonEmail: u.PersonEmail,
+                        PersonSurname: u.PersonSurname,
+                        GesamtAuslastung: aus,
+                        FreieKapa: 100 - aus,
+                        GesamtVorher: vorher,
+                        FreieKapaVorher: 100 - vorher,
+                        StandModified: stand
+                    }
+                )
+            )
+        );
+        // Toggle fuer die Ansicht: "Frei" = freie MA, "Alle" = alle MA inkl. 100 %
+        Set(varKapaFilter, "Frei");
+        // Sortierung der Kapa-Liste (gilt fuer Frei UND Alle):
+        // "FreiDesc" (default), "FreiAsc", "Nachname"
+        Set(varKapaSort, "FreiDesc");
+        ClearCollect(
+            colSortOptions,
+            Table(
+                { Code: "FreiDesc",  Label: "Frei: hoch → niedrig" },
+                { Code: "FreiAsc",   Label: "Frei: niedrig → hoch" },
+                { Code: "Nachname",  Label: "Nachname A → Z" }
+            )
+        );
+        // Toggle fuer die Einsatz-Liste: "Auslaufend" = Top 10 nach Laufzeit, "Alle" = alle aktiven Einsaetze sortiert nach Person
+        Set(varAuslFilter, "Auslaufend")
+    Children:
+      - grp_AdminRoot:
+          Control: GroupContainer
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(248, 250, 252, 1)
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutDirection: =LayoutDirection.Vertical
+            Width: =Parent.Width
+          Children:
+            - grp_AdminHeaderWrap:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  FillPortions: =0
+                  Height: =47
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutMinHeight: =47
+                Children:
+                  - grp_AdminHeader:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =RGBA(0, 110, 199, 1)
+                        FillPortions: =0
+                        Height: =44
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =12
+                        LayoutMinHeight: =44
+                        PaddingBottom: =6
+                        PaddingLeft: =18
+                        PaddingRight: =18
+                        PaddingTop: =6
+                      Children:
+                        - ico_AdminBack_Btn:
+                            Control: Button
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Subtle
+                              BasePaletteColor: =RGBA(255, 255, 255, 1)
+                              FontColor: =RGBA(255, 255, 255, 1)
+                              Height: =30
+                              Icon: ="ChevronLeft"
+                              Layout: ='ButtonCanvas.Layout'.IconOnly
+                              OnSelect: =Navigate(UserScreen, ScreenTransition.UnCover)
+                              Width: =32
+                        - lbl_AdminHeaderTitle:
+                            Control: Label
+                            Properties:
+                              Color: =RGBA(255, 255, 255, 1)
+                              FillPortions: =1
+                              Font: =Font.'Open Sans'
+                              FontWeight: =FontWeight.Bold
+                              Height: =32
+                              Size: =16
+                              Text: ="FK-Auswertung"
+                        - btn_SharePoint:
+                            Control: Button
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Subtle
+                              BasePaletteColor: =RGBA(255, 255, 255, 1)
+                              BorderRadius: =8
+                              Font: =Font.'Open Sans'
+                              FontColor: =RGBA(255, 255, 255, 1)
+                              FontSize: =12
+                              FontWeight: =FontWeight.Semibold
+                              Icon: ="Open"
+                              OnSelect: =Launch("https://o365adessogroup.sharepoint.com/sites/MicrosoftNrnberg/Lists/MSNUEEinsatzplan/AllItems.aspx", {}, LaunchTarget.New)
+                              Text: ="SharePoint"
+                              Width: =128
+                        - btn_Refresh:
+                            Control: Button
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Subtle
+                              BasePaletteColor: =RGBA(255, 255, 255, 1)
+                              BorderRadius: =8
+                              Font: =Font.'Open Sans'
+                              FontColor: =RGBA(255, 255, 255, 1)
+                              FontSize: =12
+                              FontWeight: =FontWeight.Semibold
+                              Icon: ="ArrowClockwise"
+                              OnSelect: |-
+                                =Refresh('MS-NUE-Einsatzplan');
+                                ClearCollect(colLaufendeEintraege, Filter('MS-NUE-Einsatzplan', Laufzeit >= Today()));
+                                ClearCollect(colAktiveEintraege, Filter(colLaufendeEintraege, IsBlank(Startdatum) || DateDiff(Today(), Startdatum, TimeUnit.Days) <= 0));
+                                ClearCollect(colAktiveFlat, AddColumns(colAktiveEintraege, PersonName, Person.DisplayName, PersonEmail, Lower(Person.Email), AuslastungPct, Auslastung * 100, AuslastungVorherPct, Coalesce(AuslastungVorher, 0) * 100));
+                                ClearCollect(colGroupMembers, AddColumns(Office365Groups.ListGroupMembers(varMSNUEGroupId).value, PersonName, displayName, PersonEmail, Lower(mail), PersonSurname, Coalesce(surname, displayName)));
+                                ClearCollect(colAlleUser, Filter(colGroupMembers, !IsBlank(PersonEmail) And Len(PersonEmail) > 0));
+                                ClearCollect(colAuslastungProMA, AddColumns(GroupBy(colAktiveFlat, PersonEmail, PersonName, Eintraege), GesamtAuslastung, RoundDown(Sum(Eintraege, AuslastungPct), 0), FreieKapa, 100 - RoundDown(Sum(Eintraege, AuslastungPct), 0), GesamtVorher, RoundDown(Sum(Eintraege, AuslastungVorherPct), 0), FreieKapaVorher, 100 - RoundDown(Sum(Eintraege, AuslastungVorherPct), 0), StandModified, Max(Eintraege, Modified)));
+                                ClearCollect(colFreieKapa, Filter(ForAll(colAlleUser As u, With({aus: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtAuslastung), 0), vorher: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtVorher), 0), stand: LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, StandModified)}, {PersonName: u.PersonName, PersonEmail: u.PersonEmail, PersonSurname: u.PersonSurname, GesamtAuslastung: aus, FreieKapa: 100 - aus, GesamtVorher: vorher, FreieKapaVorher: 100 - vorher, StandModified: stand})), GesamtAuslastung < 100));
+                                ClearCollect(colAlleKapa, ForAll(colAlleUser As u, With({aus: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtAuslastung), 0), vorher: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtVorher), 0), stand: LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, StandModified)}, {PersonName: u.PersonName, PersonEmail: u.PersonEmail, PersonSurname: u.PersonSurname, GesamtAuslastung: aus, FreieKapa: 100 - aus, GesamtVorher: vorher, FreieKapaVorher: 100 - vorher, StandModified: stand})))
+                              Text: ="Aktualisieren"
+                              Width: =128
+                  - rec_AdminHeaderAccent:
+                      Control: Rectangle
+                      Properties:
+                        Fill: =RGBA(136, 125, 117, 1)
+                        Height: =3
+            - grp_AdminBody:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(248, 250, 252, 1)
+                  Height: =Parent.Height - 47
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutGap: =12
+                  LayoutOverflowY: =LayoutOverflow.Scroll
+                  PaddingBottom: =14
+                  PaddingLeft: =16
+                  PaddingRight: =16
+                  PaddingTop: =14
+                  Width: =Parent.Width
+                Children:
+                  - grp_StatsRow:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        FillPortions: =0
+                        Height: =If(IsWideScreen, 96, 388)
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =If(IsWideScreen, LayoutDirection.Horizontal, LayoutDirection.Vertical)
+                        LayoutGap: =12
+                        LayoutMinHeight: =If(IsWideScreen, 96, 388)
+                        Width: =Parent.Width - 32
+                      Children:
+                        - grp_StatEintraege:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              BorderColor: =RGBA(226, 232, 240, 1)
+                              BorderThickness: =1
+                              Fill: =RGBA(255, 255, 255, 1)
+                              FillPortions: =0
+                              Height: =If(IsWideScreen, 96, 88)
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =80
+                              PaddingBottom: =14
+                              PaddingLeft: =14
+                              PaddingRight: =14
+                              PaddingTop: =14
+                              RadiusBottomLeft: =12
+                              RadiusBottomRight: =12
+                              RadiusTopLeft: =12
+                              RadiusTopRight: =12
+                              Width: =If(IsWideScreen, (Parent.Width - 36) / 4, Parent.Width)
+                            Children:
+                              - lbl_StatEintraegeLabel:
+                                  Control: Label
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(100, 116, 139, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =16
+                                    Size: =10
+                                    Text: ="Aktive Einsätze"
+                              - lbl_StatEintraegeValue:
+                                  Control: Label
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(15, 23, 42, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =32
+                                    Size: =22
+                                    Text: =Text(CountRows(colAktiveEintraege))
+                        - grp_StatMA:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              BorderColor: =RGBA(226, 232, 240, 1)
+                              BorderThickness: =1
+                              Fill: =RGBA(255, 255, 255, 1)
+                              FillPortions: =0
+                              Height: =If(IsWideScreen, 96, 88)
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =80
+                              PaddingBottom: =14
+                              PaddingLeft: =14
+                              PaddingRight: =14
+                              PaddingTop: =14
+                              RadiusBottomLeft: =12
+                              RadiusBottomRight: =12
+                              RadiusTopLeft: =12
+                              RadiusTopRight: =12
+                              Width: =If(IsWideScreen, (Parent.Width - 36) / 4, Parent.Width)
+                            Children:
+                              - lbl_StatMALabel:
+                                  Control: Label
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(100, 116, 139, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =16
+                                    Size: =10
+                                    Text: ="Aktive Mitarbeiter"
+                              - lbl_StatMAValue:
+                                  Control: Label
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(0, 75, 141, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =32
+                                    Size: =22
+                                    Text: =Text(CountRows(colAuslastungProMA))
+                        - grp_StatFrei:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              BorderColor: =RGBA(226, 232, 240, 1)
+                              BorderThickness: =1
+                              Fill: =RGBA(255, 255, 255, 1)
+                              FillPortions: =0
+                              Height: =If(IsWideScreen, 96, 88)
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =80
+                              PaddingBottom: =14
+                              PaddingLeft: =14
+                              PaddingRight: =14
+                              PaddingTop: =14
+                              RadiusBottomLeft: =12
+                              RadiusBottomRight: =12
+                              RadiusTopLeft: =12
+                              RadiusTopRight: =12
+                              Width: =If(IsWideScreen, (Parent.Width - 36) / 4, Parent.Width)
+                            Children:
+                              - lbl_StatFreiLabel:
+                                  Control: Label
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(100, 116, 139, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =16
+                                    Size: =10
+                                    Text: ="Freie Kapazitäten"
+                              - lbl_StatFreiValue:
+                                  Control: Label
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(46, 160, 67, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =32
+                                    Size: =22
+                                    Text: =Text(CountRows(colFreieKapa))
+                        - grp_StatAlert:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              BorderColor: =RGBA(226, 232, 240, 1)
+                              BorderThickness: =1
+                              Fill: =RGBA(255, 255, 255, 1)
+                              FillPortions: =0
+                              Height: =If(IsWideScreen, 96, 88)
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =4
+                              LayoutMinHeight: =80
+                              PaddingBottom: =14
+                              PaddingLeft: =14
+                              PaddingRight: =14
+                              PaddingTop: =14
+                              RadiusBottomLeft: =12
+                              RadiusBottomRight: =12
+                              RadiusTopLeft: =12
+                              RadiusTopRight: =12
+                              Width: =If(IsWideScreen, (Parent.Width - 36) / 4, Parent.Width)
+                            Children:
+                              - lbl_StatAlertLabel:
+                                  Control: Label
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(100, 116, 139, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =16
+                                    Size: =10
+                                    Text: ="Auslaufend < 14 Tage"
+                              - lbl_StatAlertValue:
+                                  Control: Label
+                                  Properties:
+                                    AlignInContainer: =AlignInContainer.Stretch
+                                    Color: =RGBA(220, 38, 38, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Bold
+                                    Height: =32
+                                    Size: =22
+                                    Text: =Text(CountRows(Filter(colAktiveEintraege, DateDiff(Today(), Laufzeit, TimeUnit.Days) < 14)))
+                  - grp_TwoColumns:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        AlignInContainer: =AlignInContainer.Start
+                        DropShadow: =DropShadow.None
+                        Height: =If(IsWideScreen, 440, 880)
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =If(IsWideScreen, LayoutDirection.Horizontal, LayoutDirection.Vertical)
+                        LayoutGap: =12
+                        LayoutMinHeight: =If(IsWideScreen, 440, 880)
+                        Width: =Parent.Width - 32
+                      Children:
+                        - grp_ColFreieKapa:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              BorderColor: =RGBA(226, 232, 240, 1)
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.Semibold
+                              Fill: =RGBA(255, 255, 255, 1)
+                              FillPortions: =0
+                              Height: =If(IsWideScreen, Parent.Height, 430)
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =8
+                              LayoutMinHeight: =400
+                              PaddingBottom: =14
+                              PaddingLeft: =16
+                              PaddingRight: =16
+                              PaddingTop: =14
+                              RadiusBottomLeft: =12
+                              RadiusBottomRight: =12
+                              RadiusTopLeft: =12
+                              RadiusTopRight: =12
+                              Width: =If(IsWideScreen, (Parent.Width - 12) / 2, Parent.Width)
+                            Children:
+                              - grp_FreieKapaHeader:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    FillPortions: =0
+                                    Height: =36
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =8
+                                    LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                                    LayoutMinHeight: =36
+                                  Children:
+                                    - lbl_FreieKapaTitle:
+                                        Control: Label
+                                        Properties:
+                                          Color: =RGBA(15, 23, 42, 1)
+                                          FillPortions: =1
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Size: =14
+                                          Text: =If(varKapaFilter = "Alle", "Alle Kapazitäten", "Freie Kapazitäten")
+                                    - cmb_KapaSort:
+                                        Control: ComboBox
+                                        Properties:
+                                          Appearance: ='ComboboxCanvas.Appearance'.Outline
+                                          DefaultSelectedItems: =Filter(colSortOptions, Code = varKapaSort)
+                                          Font: =Font.'Open Sans'
+                                          FontSize: =11
+                                          IsSearchable: =false
+                                          Items: =colSortOptions
+                                          OnChange: =Set(varKapaSort, Self.Selected.Code)
+                                          Width: =180
+                                        Children:
+                                          - Label2:
+                                              Control: ComboBoxDataField
+                                              Variant: textualColumn
+                                              IsLocked: true
+                                              Properties:
+                                                FieldDisplayName: ="Label"
+                                                FieldName: ="Label"
+                                                FieldType: ="s"
+                                                Order: =1
+                                    - grp_FKCountPill:
+                                        Control: GroupContainer
+                                        Variant: ManualLayout
+                                        Properties:
+                                          BorderColor: =RGBA(187, 230, 198, 1)
+                                          BorderThickness: =1
+                                          DropShadow: =DropShadow.None
+                                          Fill: =RGBA(235, 248, 238, 1)
+                                          FillPortions: =0
+                                          Height: =24
+                                          LayoutMaxWidth: =88
+                                          LayoutMinWidth: =88
+                                          RadiusBottomLeft: =999
+                                          RadiusBottomRight: =999
+                                          RadiusTopLeft: =999
+                                          RadiusTopRight: =999
+                                          Width: =88
+                                        Children:
+                                          - lbl_FKHdrCnt:
+                                              Control: Label
+                                              Properties:
+                                                Align: =Align.Center
+                                                Color: =RGBA(34, 110, 52, 1)
+                                                Font: =Font.'Open Sans'
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =24
+                                                Size: =10
+                                                Text: =Text(If(varKapaFilter = "Alle", CountRows(colAlleKapa), CountRows(colFreieKapa))) & " MA"
+                                                Width: =88
+                                                Y: =12
+                              - grp_KapaFilterRow:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    FillPortions: =0
+                                    Height: =34
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =8
+                                    LayoutMinHeight: =34
+                                  Children:
+                                    - btn_KapaAlle:
+                                        Control: Button
+                                        Properties:
+                                          Appearance: =If(varKapaFilter = "Alle", 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Outline)
+                                          BasePaletteColor: =RGBA(0, 75, 141, 1)
+                                          BorderRadius: =8
+                                          FillPortions: =1
+                                          Font: =Font.'Open Sans'
+                                          FontColor: =If(varKapaFilter = "Alle", RGBA(255, 255, 255, 1), RGBA(0, 75, 141, 1))
+                                          FontSize: =12
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =34
+                                          OnSelect: =Set(varKapaFilter, "Alle")
+                                          Text: ="Alle Kapazitäten"
+                                    - btn_KapaFrei:
+                                        Control: Button
+                                        Properties:
+                                          Appearance: =If(varKapaFilter = "Frei", 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Outline)
+                                          BasePaletteColor: =RGBA(0, 75, 141, 1)
+                                          BorderRadius: =8
+                                          FillPortions: =1
+                                          Font: =Font.'Open Sans'
+                                          FontColor: =If(varKapaFilter = "Frei", RGBA(255, 255, 255, 1), RGBA(0, 75, 141, 1))
+                                          FontSize: =12
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =34
+                                          OnSelect: =Set(varKapaFilter, "Frei")
+                                          Text: ="Freie Mitarbeiter"
+                              - gal_FreieKapa:
+                                  Control: Gallery
+                                  Variant: Vertical
+                                  Properties:
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Height: =Parent.Height - 106
+                                    Items: |
+                                      =Switch(varKapaSort, "FreiAsc", Sort(If(varKapaFilter = "Alle", colAlleKapa, colFreieKapa), FreieKapa, SortOrder.Ascending), "Nachname", Sort(If(varKapaFilter = "Alle", colAlleKapa, colFreieKapa), PersonSurname, SortOrder.Ascending), Sort(If(varKapaFilter = "Alle", colAlleKapa, colFreieKapa), FreieKapa, SortOrder.Descending))
+                                    LayoutMinHeight: =320
+                                    TemplatePadding: =4
+                                    TemplateSize: =72
+                                    Width: =Parent.Width - 32
+                                  Children:
+                                    - grp_FKCard:
+                                        Control: GroupContainer
+                                        Variant: ManualLayout
+                                        Properties:
+                                          BorderColor: =RGBA(226, 232, 240, 1)
+                                          BorderThickness: =1
+                                          DropShadow: =DropShadow.None
+                                          Fill: =RGBA(248, 250, 252, 1)
+                                          Height: =64
+                                          RadiusBottomLeft: =10
+                                          RadiusBottomRight: =10
+                                          RadiusTopLeft: =10
+                                          RadiusTopRight: =10
+                                          Width: =Parent.TemplateWidth
+                                          Y: =4
+                                        Children:
+                                          - rec_FKAccent:
+                                              Control: Rectangle
+                                              Properties:
+                                                Fill: =If(ThisItem.GesamtAuslastung >= 100, RGBA(220, 38, 38, 1), RGBA(46, 160, 67, 1))
+                                                Height: =64
+                                                Width: =4
+                                    - lbl_FKMitarbeiter:
+                                        Control: Label
+                                        Properties:
+                                          Color: =RGBA(15, 23, 42, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =22
+                                          Text: =ThisItem.PersonName
+                                          Width: =Parent.TemplateWidth - 150
+                                          X: =18
+                                          Y: =10
+                                    - lbl_FKAuslastung:
+                                        Control: Label
+                                        Properties:
+                                          Color: =RGBA(100, 116, 139, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =18
+                                          Size: =11
+                                          Text: |
+                                            ="Aktuelle Auslastung: " & ThisItem.GesamtAuslastung & " %"
+                                          Width: =Parent.TemplateWidth - 150
+                                          X: =18
+                                          Y: =34
+                                    - grp_FKPill:
+                                        Control: GroupContainer
+                                        Variant: ManualLayout
+                                        Properties:
+                                          Fill: =If(ThisItem.GesamtAuslastung >= 100, RGBA(220, 38, 38, 1), RGBA(46, 160, 67, 1))
+                                          Height: =28
+                                          RadiusBottomLeft: =999
+                                          RadiusBottomRight: =999
+                                          RadiusTopLeft: =999
+                                          RadiusTopRight: =999
+                                          Width: =104
+                                          X: =Parent.TemplateWidth - 118
+                                          Y: =22
+                                        Children:
+                                          - lbl_FKPillText:
+                                              Control: Label
+                                              Properties:
+                                                Align: =Align.Center
+                                                Color: =RGBA(255, 255, 255, 1)
+                                                Font: =Font.'Open Sans'
+                                                FontWeight: =FontWeight.Bold
+                                                Height: =Parent.Height
+                                                Size: =11
+                                                Text: |
+                                                  =If(ThisItem.GesamtAuslastung >= 100, "Voll: " & ThisItem.GesamtAuslastung & " %", "Frei: " & ThisItem.FreieKapa & " %")
+                                                Width: =Parent.Width
+                                    - lbl_FKVorherWert:
+                                        Control: Label
+                                        Properties:
+                                          Color: =RGBA(100, 116, 139, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =16
+                                          Size: =10
+                                          Text: |
+                                            =If(ThisItem.GesamtVorher > 0, "Vorheriger Wert: " & (100 - ThisItem.GesamtVorher) & " %", "Vorheriger Wert: —")
+                                          Visible: =varKapaFilter = "Alle"
+                                          Width: =200
+                                          X: =Parent.TemplateWidth - 270
+                                          Y: =22
+                                    - lbl_FKVorherStand:
+                                        Control: Label
+                                        Properties:
+                                          Color: =RGBA(148, 163, 184, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =14
+                                          Size: =9
+                                          Text: |
+                                            =If(IsBlank(ThisItem.StandModified), "Stand: —", "Stand: " & Text(ThisItem.StandModified, "[$-de-DE]dd.mm.yyyy hh:mm"))
+                                          Visible: =varKapaFilter = "Alle"
+                                          Width: =200
+                                          X: =Parent.TemplateWidth - 270
+                                          Y: =40
+                        - grp_ColAuslaufend:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              BorderColor: =RGBA(226, 232, 240, 1)
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.Semibold
+                              Fill: =RGBA(255, 255, 255, 1)
+                              FillPortions: =0
+                              Height: =If(IsWideScreen, Parent.Height, 472)
+                              LayoutAlignItems: =LayoutAlignItems.Stretch
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =8
+                              LayoutMinHeight: =442
+                              PaddingBottom: =14
+                              PaddingLeft: =16
+                              PaddingRight: =16
+                              PaddingTop: =14
+                              RadiusBottomLeft: =12
+                              RadiusBottomRight: =12
+                              RadiusTopLeft: =12
+                              RadiusTopRight: =12
+                              Width: =If(IsWideScreen, (Parent.Width - 12) / 2, Parent.Width)
+                            Children:
+                              - grp_AuslaufendHeader:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    FillPortions: =0
+                                    Height: =36
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =8
+                                    LayoutJustifyContent: =LayoutJustifyContent.SpaceBetween
+                                    LayoutMinHeight: =36
+                                  Children:
+                                    - lbl_AuslaufendTitle:
+                                        Control: Label
+                                        Properties:
+                                          Color: =RGBA(15, 23, 42, 1)
+                                          FillPortions: =1
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Size: =14
+                                          Text: =Switch(varAuslFilter, "Alle", "Alle Einsätze", "Auslaufende Projekte")
+                                    - grp_AuslCountPill:
+                                        Control: GroupContainer
+                                        Variant: ManualLayout
+                                        Properties:
+                                          BorderColor: =If(varAuslFilter = "Alle", RGBA(147, 197, 253, 1), RGBA(252, 165, 165, 1))
+                                          BorderThickness: =1
+                                          DropShadow: =DropShadow.None
+                                          Fill: =If(varAuslFilter = "Alle", RGBA(219, 234, 254, 1), RGBA(254, 242, 242, 1))
+                                          FillPortions: =0
+                                          Height: =24
+                                          LayoutMaxWidth: =96
+                                          LayoutMinWidth: =96
+                                          RadiusBottomLeft: =999
+                                          RadiusBottomRight: =999
+                                          RadiusTopLeft: =999
+                                          RadiusTopRight: =999
+                                          Width: =96
+                                        Children:
+                                          - lbl_AuslHdrCnt:
+                                              Control: Label
+                                              Properties:
+                                                Align: =Align.Center
+                                                Color: =If(varAuslFilter = "Alle", RGBA(0, 75, 141, 1), RGBA(185, 28, 28, 1))
+                                                Font: =Font.'Open Sans'
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =24
+                                                Size: =10
+                                                Text: =Text(CountRows(colAktiveEintraege)) & " gesamt"
+                                                Width: =96
+                                                Y: =12
+                              - grp_AuslFilterRow:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    FillPortions: =0
+                                    Height: =34
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =8
+                                    LayoutMinHeight: =34
+                                  Children:
+                                    - btn_AuslAuslaufend:
+                                        Control: Button
+                                        Properties:
+                                          Appearance: =If(varAuslFilter = "Auslaufend", 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Outline)
+                                          BasePaletteColor: =RGBA(0, 75, 141, 1)
+                                          BorderRadius: =8
+                                          FillPortions: =1
+                                          Font: =Font.'Open Sans'
+                                          FontColor: =If(varAuslFilter = "Auslaufend", RGBA(255, 255, 255, 1), RGBA(0, 75, 141, 1))
+                                          FontSize: =12
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =34
+                                          OnSelect: =Set(varAuslFilter, "Auslaufend")
+                                          Text: ="Auslaufende Einsätze"
+                                    - btn_AuslAlle:
+                                        Control: Button
+                                        Properties:
+                                          Appearance: =If(varAuslFilter = "Alle", 'ButtonCanvas.Appearance'.Primary, 'ButtonCanvas.Appearance'.Outline)
+                                          BasePaletteColor: =RGBA(0, 75, 141, 1)
+                                          BorderRadius: =8
+                                          FillPortions: =1
+                                          Font: =Font.'Open Sans'
+                                          FontColor: =If(varAuslFilter = "Alle", RGBA(255, 255, 255, 1), RGBA(0, 75, 141, 1))
+                                          FontSize: =12
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =34
+                                          OnSelect: =Set(varAuslFilter, "Alle")
+                                          Text: ="Alle Einsätze"
+                              - gal_AuslaufendeProjekte:
+                                  Control: Gallery
+                                  Variant: Vertical
+                                  Properties:
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Height: =Parent.Height - 98
+                                    Items: =If(varAuslFilter = "Alle", Sort(Filter('MS-NUE-Einsatzplan', Laufzeit >= Today()), Person.DisplayName), SortByColumns(Filter('MS-NUE-Einsatzplan', Laufzeit >= Today()), "Laufzeit", SortOrder.Ascending))
+                                    LayoutMinHeight: =320
+                                    TemplatePadding: =4
+                                    TemplateSize: =82
+                                    Width: =Parent.Width - 32
+                                  Children:
+                                    - grp_AuslCard:
+                                        Control: GroupContainer
+                                        Variant: ManualLayout
+                                        Properties:
+                                          BorderColor: =RGBA(226, 232, 240, 1)
+                                          BorderThickness: =1
+                                          DropShadow: =DropShadow.None
+                                          Fill: =RGBA(248, 250, 252, 1)
+                                          Height: =74
+                                          RadiusBottomLeft: =10
+                                          RadiusBottomRight: =10
+                                          RadiusTopLeft: =10
+                                          RadiusTopRight: =10
+                                          Width: =Parent.TemplateWidth
+                                          Y: =4
+                                        Children:
+                                          - rec_AuslAccent:
+                                              Control: Rectangle
+                                              Properties:
+                                                Fill: =If(DateDiff(Today(), ThisItem.Laufzeit, TimeUnit.Days) < 14, RGBA(220, 38, 38, 1), RGBA(0, 75, 141, 1))
+                                                Height: =74
+                                                Width: =4
+                                    - grp_AuslAvatar:
+                                        Control: GroupContainer
+                                        Variant: ManualLayout
+                                        Properties:
+                                          Fill: =RGBA(0, 75, 141, 1)
+                                          Height: =40
+                                          RadiusBottomLeft: =999
+                                          RadiusBottomRight: =999
+                                          RadiusTopLeft: =999
+                                          RadiusTopRight: =999
+                                          Width: =40
+                                          X: =14
+                                          Y: =21
+                                        Children:
+                                          - lbl_AuslInitial:
+                                              Control: Label
+                                              Properties:
+                                                Align: =Align.Center
+                                                Color: =RGBA(255, 255, 255, 1)
+                                                Font: =Font.'Open Sans'
+                                                FontWeight: =FontWeight.Bold
+                                                Size: =14
+                                                Text: =Upper(Left(ThisItem.Person.DisplayName, 1))
+                                                Width: =40
+                                          - img_AuslPhoto:
+                                              Control: Image
+                                              Properties:
+                                                Height: =40
+                                                Image: =If(IsBlank(ThisItem.Person.Email), Blank(), Office365Users.UserPhoto(ThisItem.Person.Email))
+                                                ImagePosition: =ImagePosition.Fill
+                                                RadiusBottomLeft: =999
+                                                RadiusBottomRight: =999
+                                                RadiusTopLeft: =999
+                                                RadiusTopRight: =999
+                                                Visible: =!IsBlank(ThisItem.Person.Email)
+                                                Width: =40
+                                    - lbl_AuslName:
+                                        Control: Label
+                                        Properties:
+                                          Color: =RGBA(15, 23, 42, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =20
+                                          Size: =14
+                                          Text: =ThisItem.Person.DisplayName
+                                          Width: =Parent.TemplateWidth - 206
+                                          X: =64
+                                          Y: =8
+                                    - lbl_AuslKunde:
+                                        Control: Label
+                                        Properties:
+                                          Color: =RGBA(0, 75, 141, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =16
+                                          Size: =11
+                                          Text: |-
+                                            =ThisItem.Kunde & " / (PL: "&ThisItem.Projektleiter.DisplayName&")"
+                                          Width: =Parent.TemplateWidth - 206
+                                          X: =64
+                                          Y: =28
+                                    - lbl_AuslEnde:
+                                        Control: Label
+                                        Properties:
+                                          Color: =RGBA(100, 116, 139, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =16
+                                          Size: =11
+                                          Text: |
+                                            =Text(ThisItem.Startdatum, "[$-de-DE]dd.mm.yyyy") & " – " & Text(ThisItem.Laufzeit, "[$-de-DE]dd.mm.yyyy")
+                                          Width: =Parent.TemplateWidth - 206
+                                          X: =64
+                                          Y: =48
+                                    - grp_AuslDiffPill:
+                                        Control: GroupContainer
+                                        Variant: ManualLayout
+                                        Properties:
+                                          BorderColor: =If(DateDiff(Today(), ThisItem.Laufzeit, TimeUnit.Days) < 14, RGBA(252, 165, 165, 1), RGBA(147, 197, 253, 1))
+                                          BorderThickness: =1
+                                          DropShadow: =DropShadow.None
+                                          Fill: =If(DateDiff(Today(), ThisItem.Laufzeit, TimeUnit.Days) < 14, RGBA(254, 226, 226, 1), RGBA(219, 234, 254, 1))
+                                          Height: =28
+                                          RadiusBottomLeft: =999
+                                          RadiusBottomRight: =999
+                                          RadiusTopLeft: =999
+                                          RadiusTopRight: =999
+                                          Width: =118
+                                          X: =Parent.TemplateWidth - 134
+                                          Y: =24
+                                        Children:
+                                          - lbl_AuslDiff:
+                                              Control: Label
+                                              Properties:
+                                                Align: =Align.Center
+                                                Color: =If(DateDiff(Today(), ThisItem.Laufzeit, TimeUnit.Days) < 14, RGBA(185, 28, 28, 1), RGBA(0, 75, 141, 1))
+                                                Font: =Font.'Open Sans'
+                                                FontWeight: =FontWeight.Bold
+                                                Height: =Parent.Height
+                                                Size: =11
+                                                Text: |
+                                                  ="Noch " & DateDiff(Today(), ThisItem.Laufzeit, TimeUnit.Days) & " Tage"
+                                                Width: =Parent.Width

@@ -1,0 +1,494 @@
+Screens:
+  EditScreen:
+    Properties:
+      Fill: =RGBA(248, 250, 252, 1)
+      OnVisible: |-
+        =// Die Feldwerte werden per Navigate-Context (ctxName, ctxKunde, ...)
+        // von UserScreen (btn_Edit / btn_Neu) uebergeben.
+        Set(varValidationMsg, "")
+    Children:
+      - grp_EditRoot:
+          Control: GroupContainer
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(248, 250, 252, 1)
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutDirection: =LayoutDirection.Vertical
+            Width: =Parent.Width
+          Children:
+            - grp_EditHeaderWrap:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  FillPortions: =0
+                  Height: =47
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutMinHeight: =47
+                Children:
+                  - grp_EditHeader:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =RGBA(0, 110, 199, 1)
+                        FillPortions: =0
+                        Height: =44
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =12
+                        LayoutMinHeight: =44
+                        PaddingBottom: =6
+                        PaddingLeft: =18
+                        PaddingRight: =18
+                        PaddingTop: =6
+                      Children:
+                        - ico_EditBack_Btn:
+                            Control: Button
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Subtle
+                              BasePaletteColor: =RGBA(255, 255, 255, 1)
+                              FontColor: =RGBA(255, 255, 255, 1)
+                              Height: =30
+                              Icon: ="ChevronLeft"
+                              Layout: ='ButtonCanvas.Layout'.IconOnly
+                              OnSelect: =Navigate(UserScreen, ScreenTransition.UnCover)
+                              Width: =32
+                        - lbl_EditHeaderTitle:
+                            Control: Label
+                            Properties:
+                              Color: =RGBA(255, 255, 255, 1)
+                              FillPortions: =1
+                              Font: =Font.'Open Sans'
+                              FontWeight: =FontWeight.Bold
+                              Height: =32
+                              Size: =16
+                              Text: =If(varFormMode="Edit", "Eintrag bearbeiten", "Neuer Eintrag")
+                  - rec_EditHeaderAccent:
+                      Control: Rectangle
+                      Properties:
+                        Fill: =RGBA(136, 125, 117, 1)
+                        Height: =3
+            - grp_Body:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(248, 250, 252, 1)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutMinHeight: =0
+                  LayoutOverflowY: =LayoutOverflow.Scroll
+                  PaddingBottom: =12
+                  PaddingLeft: =12
+                  PaddingRight: =12
+                  PaddingTop: =12
+                Children:
+                  - grp_EditCard:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        BorderColor: =RGBA(226, 232, 240, 1)
+                        BorderThickness: =1
+                        DropShadow: =DropShadow.Semibold
+                        Fill: =RGBA(255, 255, 255, 1)
+                        LayoutAlignItems: =LayoutAlignItems.Stretch
+                        LayoutDirection: =LayoutDirection.Vertical
+                        LayoutGap: =8
+                        LayoutMinHeight: =0
+                        PaddingBottom: =16
+                        PaddingLeft: =18
+                        PaddingRight: =18
+                        PaddingTop: =14
+                        RadiusBottomLeft: =12
+                        RadiusBottomRight: =12
+                        RadiusTopLeft: =12
+                        RadiusTopRight: =12
+                      Children:
+                        - lbl_CardTitle:
+                            Control: Label
+                            Properties:
+                              AutoHeight: =true
+                              Color: =RGBA(15, 23, 42, 1)
+                              Font: =Font.'Open Sans'
+                              FontWeight: =FontWeight.Bold
+                              Size: =15
+                              Text: ="Einsatzdetails (Nur Kunden KV Projekte)"
+                        - rec_Divider1:
+                            Control: Rectangle
+                            Properties:
+                              Fill: =RGBA(226, 232, 240, 1)
+                              Height: =1
+                        - grp_RowTitleName:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              FillPortions: =0
+                              Height: =68
+                              LayoutDirection: =If(IsWideScreen, LayoutDirection.Horizontal, LayoutDirection.Vertical)
+                              LayoutGap: =12
+                              LayoutMinHeight: =68
+                            Children:
+                              - grp_FieldName:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =3
+                                    LayoutMinHeight: =0
+                                  Children:
+                                    - lbl_Name:
+                                        Control: Label
+                                        Properties:
+                                          Color: =RGBA(71, 85, 105, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =16
+                                          Size: =11
+                                          Text: ="Mitarbeiter *"
+                                    - txt_Name:
+                                        Control: TextInput
+                                        Properties:
+                                          Appearance: ='TextInputCanvas.Appearance'.Outline
+                                          DisplayMode: =DisplayMode.View
+                                          Font: =Font.'Open Sans'
+                                          FontSize: =13
+                                          Height: =34
+                                          Value: =varCurrentUser.FullName
+                        - grp_RowDates:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              FillPortions: =0
+                              Height: =68
+                              LayoutDirection: =If(IsWideScreen, LayoutDirection.Horizontal, LayoutDirection.Vertical)
+                              LayoutGap: =12
+                              LayoutMinHeight: =68
+                            Children:
+                              - grp_FieldStartdatum:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =3
+                                    LayoutMinHeight: =0
+                                  Children:
+                                    - lbl_Startdatum:
+                                        Control: Label
+                                        Properties:
+                                          Color: =RGBA(71, 85, 105, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =16
+                                          Size: =11
+                                          Text: ="Startdatum"
+                                    - dte_Start:
+                                        Control: DatePicker
+                                        Properties:
+                                          Appearance: ='DatePickerCanvas.Appearance'.Outline
+                                          Font: =Font.'Open Sans'
+                                          FontSize: =13
+                                          Format: ="dd.mm.yyyy"
+                                          Height: =34
+                                          SelectedDate: =ctxStart
+                              - grp_FieldLaufzeit:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =3
+                                    LayoutMinHeight: =0
+                                  Children:
+                                    - lbl_Laufzeit:
+                                        Control: Label
+                                        Properties:
+                                          Color: =RGBA(71, 85, 105, 1)
+                                          Fill: =RGBA(255, 255, 255, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =16
+                                          Size: =11
+                                          Text: ="Enddatum *"
+                                    - dte_Laufzeit:
+                                        Control: DatePicker
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: ='DatePickerCanvas.Appearance'.Outline
+                                          Font: =Font.'Open Sans'
+                                          FontSize: =13
+                                          Format: ="dd.mm.yyyy"
+                                          Height: =34
+                                          SelectedDate: =ctxLaufzeit
+                        - grp_RowKundeAuslastung:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              FillPortions: =0
+                              Height: =68
+                              LayoutDirection: =If(IsWideScreen, LayoutDirection.Horizontal, LayoutDirection.Vertical)
+                              LayoutGap: =12
+                              LayoutMinHeight: =68
+                            Children:
+                              - grp_FieldKunde:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =3
+                                    LayoutMinHeight: =0
+                                  Children:
+                                    - lbl_Kunde:
+                                        Control: Label
+                                        Properties:
+                                          Color: =RGBA(71, 85, 105, 1)
+                                          Fill: =RGBA(255, 255, 255, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =16
+                                          Size: =11
+                                          Text: ="Kunde *"
+                                    - txt_Kunde:
+                                        Control: TextInput
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: ='TextInputCanvas.Appearance'.Outline
+                                          Font: =Font.'Open Sans'
+                                          FontSize: =13
+                                          Height: =34
+                                          Placeholder: ="Kundenname"
+                                          Value: =ctxKunde
+                              - grp_FieldAuslastung:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
+                                  Properties:
+                                    DropShadow: =DropShadow.None
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    LayoutAlignItems: =LayoutAlignItems.Stretch
+                                    LayoutDirection: =LayoutDirection.Vertical
+                                    LayoutGap: =3
+                                    LayoutMinHeight: =0
+                                  Children:
+                                    - lbl_Auslastung:
+                                        Control: Label
+                                        Properties:
+                                          Color: =RGBA(71, 85, 105, 1)
+                                          Fill: =RGBA(255, 255, 255, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =16
+                                          Size: =11
+                                          Text: ="Auslastung in % *"
+                                    - num_Auslastung:
+                                        Control: NumberInput
+                                        Properties:
+                                          AlignInContainer: =AlignInContainer.Stretch
+                                          Appearance: ='NumberInput.Appearance'.Outline
+                                          FontSize: =13
+                                          Height: =34
+                                          Max: =100
+                                          Min: =0
+                                          Step: =5
+                                          Value: =ctxAuslastung
+                        - grp_RowProjektleiter:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              FillPortions: =0
+                              Height: =68
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutGap: =3
+                              LayoutMinHeight: =68
+                            Children:
+                              - lbl_Projektleiter:
+                                  Control: Label
+                                  Properties:
+                                    Color: =RGBA(71, 85, 105, 1)
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Semibold
+                                    Height: =16
+                                    Size: =11
+                                    Text: ="Projektleiter *"
+                              - cmb_Projektleiter:
+                                  Control: ComboBox
+                                  Properties:
+                                    Appearance: ='ComboboxCanvas.Appearance'.Outline
+                                    DefaultSelectedItems: |
+                                      =If(!IsBlank(ctxProjektleiterEmail), Office365Users.SearchUser({searchTerm: ctxProjektleiterEmail, top: 1}), Blank())
+                                    Font: =Font.'Open Sans'
+                                    FontSize: =13
+                                    Height: =34
+                                    InputTextPlaceholder: ="Projektleiter suchen"
+                                    Items: |
+                                      =Office365Users.SearchUser({searchTerm: cmb_Projektleiter.SearchText, top: 20})
+                                  Children:
+                                    - DisplayName1:
+                                        Control: ComboBoxDataField
+                                        Variant: textualColumn
+                                        IsLocked: true
+                                        Properties:
+                                          FieldDisplayName: ="DisplayName"
+                                          FieldName: ="DisplayName"
+                                          FieldType: ="s"
+                                          Order: =1
+                                    - Mail1:
+                                        Control: ComboBoxDataField
+                                        Variant: textualColumn
+                                        IsLocked: true
+                                        Properties:
+                                          FieldDisplayName: ="Mail"
+                                          FieldName: ="Mail"
+                                          FieldType: ="s"
+                                          Order: =2
+                        - grp_Validation:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              BorderColor: =RGBA(252, 165, 165, 1)
+                              BorderThickness: =1
+                              DropShadow: =DropShadow.None
+                              Fill: =RGBA(254, 242, 242, 1)
+                              FillPortions: =0
+                              LayoutAlignItems: =LayoutAlignItems.Center
+                              LayoutDirection: =LayoutDirection.Horizontal
+                              LayoutGap: =10
+                              PaddingBottom: =8
+                              PaddingLeft: =12
+                              PaddingRight: =12
+                              PaddingTop: =8
+                              RadiusBottomLeft: =8
+                              RadiusBottomRight: =8
+                              RadiusTopLeft: =8
+                              RadiusTopRight: =8
+                              Visible: =!IsBlank(varValidationMsg)
+                            Children:
+                              - lbl_Validation:
+                                  Control: Label
+                                  Properties:
+                                    AutoHeight: =true
+                                    Color: =RGBA(185, 28, 28, 1)
+                                    FillPortions: =1
+                                    Font: =Font.'Open Sans'
+                                    FontWeight: =FontWeight.Semibold
+                                    Size: =12
+                                    Text: =varValidationMsg
+                        - grp_Spacer:
+                            Control: GroupContainer
+                            Variant: AutoLayout
+                            Properties:
+                              DropShadow: =DropShadow.None
+                              LayoutDirection: =LayoutDirection.Vertical
+                              LayoutMinHeight: =0
+            - grp_ActionBar:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  BorderColor: =RGBA(226, 232, 240, 1)
+                  BorderThickness: =1
+                  Fill: =RGBA(255, 255, 255, 1)
+                  FillPortions: =0
+                  Height: =60
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =10
+                  LayoutJustifyContent: =LayoutJustifyContent.End
+                  PaddingBottom: =10
+                  PaddingLeft: =16
+                  PaddingRight: =16
+                  PaddingTop: =10
+                Children:
+                  - btn_Abbrechen:
+                      Control: Button
+                      Properties:
+                        Appearance: ='ButtonCanvas.Appearance'.Outline
+                        BasePaletteColor: =RGBA(0, 75, 141, 1)
+                        BorderRadius: =8
+                        Font: =Font.'Open Sans'
+                        FontColor: =RGBA(0, 75, 141, 1)
+                        FontSize: =13
+                        FontWeight: =FontWeight.Semibold
+                        Height: =38
+                        OnSelect: =Navigate(UserScreen, ScreenTransition.UnCover)
+                        Text: ="Abbrechen"
+                        Width: =128
+                  - btn_Speichern:
+                      Control: Button
+                      Properties:
+                        Appearance: ='ButtonCanvas.Appearance'.Primary
+                        BasePaletteColor: =RGBA(0, 75, 141, 1)
+                        BorderRadius: =8
+                        Font: =Font.'Open Sans'
+                        FontColor: =RGBA(255, 255, 255, 1)
+                        FontSize: =13
+                        FontWeight: =FontWeight.Semibold
+                        Height: =38
+                        Icon: ="Checkmark"
+                        OnSelect: |-
+                          =// Pflichtfelder pruefen
+                          If(IsBlank(txt_Name.Value) || IsBlank(txt_Kunde.Value) || IsBlank(dte_Laufzeit.SelectedDate) || IsBlank(cmb_Projektleiter.Selected.Mail),
+                              Set(varValidationMsg, "Bitte alle Pflichtfelder ausfüllen."),
+                              If(dte_Laufzeit.SelectedDate < Today(),
+                                  Set(varValidationMsg, "Enddatum muss in der Zukunft liegen."),
+                                  If(!IsBlank(dte_Start.SelectedDate) && dte_Start.SelectedDate > dte_Laufzeit.SelectedDate,
+                                      Set(varValidationMsg, "Startdatum darf nicht nach dem Enddatum liegen."),
+                                      If(num_Auslastung.Value < 0 || num_Auslastung.Value > 100,
+                                          Set(varValidationMsg, "Auslastung muss zwischen 0 und 100 liegen."),
+                                          // Overlap-aware Pruefung: in jedem Tag des Zeitraums [S_new, E_new]
+                                          // darf die Tages-Auslastung 100 % nicht ueberschreiten.
+                                          // Maxima koennen nur an Tag-Grenzen auftreten -> wir pruefen S_new
+                                          // und jeden Start-Termin eines existierenden Einsatzes innerhalb (S_new, E_new].
+                                          Set(varSnew, Coalesce(dte_Start.SelectedDate, Today()));
+                                          Set(varEnew, dte_Laufzeit.SelectedDate);
+                                          Set(varAnew, num_Auslastung.Value);
+                                          // Schritt 1: SP-Query (delegierbar) - alle Eintraege des Users mit Laufzeit >= Start des neuen Zeitraums
+                                          ClearCollect(
+                                              colMyAllForOverlap,
+                                              Filter('MS-NUE-Einsatzplan', Person.Email = varCurrentUser.Email && Laufzeit >= varSnew)
+                                          );
+                                          // Schritt 2: Komplexer Filter clientseitig (Edit-Exclusion + Coalesce-Startdatum)
+                                          ClearCollect(
+                                              colOtherOverlap,
+                                              AddColumns(
+                                                  Filter(colMyAllForOverlap,
+                                                      If(varFormMode = "Edit" && !IsBlank(varSelectedItem), ID <> varSelectedItem.ID, true)
+                                                      && Coalesce(Startdatum, varSnew) <= varEnew
+                                                  ),
+                                                  NormStart, Coalesce(Startdatum, varSnew),
+                                                  AuslastungPct, Auslastung * 100
+                                              )
+                                          );
+                                          Set(varLoadAtSnew, varAnew + RoundDown(Sum(Filter(colOtherOverlap, NormStart <= varSnew && Laufzeit >= varSnew), AuslastungPct), 0));
+                                          Set(varMaxLoadAtSi, Coalesce(Max(ForAll(Filter(colOtherOverlap, NormStart > varSnew) As d, { Load: varAnew + RoundDown(Sum(Filter(colOtherOverlap, NormStart <= d.NormStart && Laufzeit >= d.NormStart), AuslastungPct), 0) }), Load), 0));
+                                          Set(varMaxLoad, Max(varLoadAtSnew, varMaxLoadAtSi));
+                                          If(varMaxLoad > 100,
+                                              Set(varValidationMsg, "Im Zeitraum " & Text(varSnew, "[$-de-DE]dd.mm.yyyy") & " bis " & Text(varEnew, "[$-de-DE]dd.mm.yyyy") & " wären bis zu " & varMaxLoad & " % gleichzeitig belegt (max 100 %)."),
+                                              Set(varValidationMsg, "");
+                                              If(varFormMode = "Edit",
+                                                  Patch('MS-NUE-Einsatzplan', varSelectedItem, { Name: txt_Name.Value, Kunde: txt_Kunde.Value, Startdatum: dte_Start.SelectedDate, Laufzeit: dte_Laufzeit.SelectedDate, AuslastungVorher: Coalesce(varSelectedItem.Auslastung, 0), Auslastung: num_Auslastung.Value / 100, Projektleiter: { '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedUser", Claims: "i:0#.f|membership|" & Lower(cmb_Projektleiter.Selected.Mail), Department: "", DisplayName: cmb_Projektleiter.Selected.DisplayName, Email: Lower(cmb_Projektleiter.Selected.Mail), JobTitle: "", Picture: "" } }),
+                                                  Patch('MS-NUE-Einsatzplan', Defaults('MS-NUE-Einsatzplan'), { Name: txt_Name.Value, Kunde: txt_Kunde.Value, Startdatum: dte_Start.SelectedDate, Laufzeit: dte_Laufzeit.SelectedDate, Auslastung: num_Auslastung.Value / 100, Person: { '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedUser", Claims: "i:0#.f|membership|" & Lower(varCurrentUser.Email), Department: "", DisplayName: varCurrentUser.FullName, Email: Lower(varCurrentUser.Email), JobTitle: "", Picture: "" }, Projektleiter: { '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedUser", Claims: "i:0#.f|membership|" & Lower(cmb_Projektleiter.Selected.Mail), Department: "", DisplayName: cmb_Projektleiter.Selected.DisplayName, Email: Lower(cmb_Projektleiter.Selected.Mail), JobTitle: "", Picture: "" } })
+                                              );
+                                              Notify(If(varFormMode="Edit", "Eintrag aktualisiert", "Eintrag angelegt"), NotificationType.Success);
+                                              Navigate(UserScreen, ScreenTransition.UnCover)
+                                          )
+                                      )
+                                  )
+                              )
+                          )
+                        Text: ="Speichern"
+                        Width: =156
