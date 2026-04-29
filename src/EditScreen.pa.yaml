@@ -5,7 +5,10 @@ Screens:
       OnVisible: |-
         =// Die Feldwerte werden per Navigate-Context (ctxName, ctxKunde, ...)
         // von UserScreen (btn_Edit / btn_Neu) uebergeben.
-        Set(varValidationMsg, "")
+        Set(varValidationMsg, "");
+        // Combo zuruecksetzen, damit eingetippter Suchtext aus voriger Session weg ist.
+        // Re-evaluiert DefaultSelectedItems -> bei Edit wird der Projektleiter wieder vorausgewaehlt.
+        Reset(cmb_Projektleiter)
     Children:
       - grp_EditRoot:
           Control: GroupContainer
@@ -335,8 +338,6 @@ Screens:
                                     InputTextPlaceholder: ="Projektleiter suchen"
                                     Items: |
                                       =If(Len(cmb_Projektleiter.SearchText) < 1, Filter(Office365Users.SearchUser({searchTerm: "."}), false), Office365Users.SearchUser({searchTerm: cmb_Projektleiter.SearchText, top: 20}))
-                                    OnChange: =If(IsBlank(cmb_Projektleiter.Selected), Reset(cmb_Projektleiter))
-                                    TriggerOutput: ='ComboboxCanvas.TriggerOutput'.FocusOut
                                   Children:
                                     - DisplayName1:
                                         Control: ComboBoxDataField
