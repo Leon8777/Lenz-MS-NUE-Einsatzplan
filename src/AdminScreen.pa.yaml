@@ -939,6 +939,7 @@ Screens:
                                                 Size: =11
                                                 Text: |
                                                   =RoundDown(ThisItem.Auslastung * 100, 0) & " %"
+                                                VerticalAlign: =VerticalAlign.Middle
                                                 Width: =118
                                     - grp_AuslDiffPill:
                                         Control: GroupContainer
@@ -964,8 +965,9 @@ Screens:
                                                 Color: =If(DateDiff(Today(), ThisItem.Laufzeit, TimeUnit.Days) < 14, RGBA(185, 28, 28, 1), RGBA(0, 75, 141, 1))
                                                 Font: =Font.'Open Sans'
                                                 FontWeight: =FontWeight.Bold
-                                                Height: =Parent.Height
+                                                Height: =26
                                                 Size: =11
                                                 Text: |
                                                   ="Noch " & DateDiff(Today(), ThisItem.Laufzeit, TimeUnit.Days) & " Tage"
-                                                Width: =Parent.Width
+                                                VerticalAlign: =VerticalAlign.Middle
+                                                Width: =118
