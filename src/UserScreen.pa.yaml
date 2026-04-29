@@ -543,7 +543,6 @@ Screens:
                                           Size: =10
                                           Text: ="Noch nicht aktiv"
                                           Width: =140
-                                          Y: =0
       - grp_DeleteDialog:
           Control: GroupContainer
           Variant: ManualLayout
@@ -585,7 +584,7 @@ Screens:
                         FontWeight: =FontWeight.Bold
                         Height: =30
                         Size: =20
-                        Text: ="Eintrag löschen?"
+                        Text: ="Eintrag loeschen?"
                         Width: =404
                         X: =28
                         Y: =24
@@ -646,8 +645,8 @@ Screens:
                           Set(varMeineFreieKapa, Max(0, 100 - varMeineAuslastung));
                           Set(varShowDeleteDialog, false);
                           Set(varItemToDelete, Blank());
-                          Notify("Eintrag gelöscht", NotificationType.Success)
-                        Text: ="Löschen"
+                          Notify("Eintrag geloescht", NotificationType.Success)
+                        Text: ="Loeschen"
                         Width: =128
                         X: =318
                         Y: =178

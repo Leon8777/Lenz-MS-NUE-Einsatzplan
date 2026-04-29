@@ -485,7 +485,7 @@ Screens:
                                           Font: =Font.'Open Sans'
                                           FontWeight: =FontWeight.Bold
                                           Size: =14
-                                          Text: =If(varKapaFilter = "Alle", "Alle Kapazitäten", "Freie Kapazitäten")
+                                          Text: =If(varKapaFilter = "Alle", "Alle Kapazitaeten", "Freie Kapazitaeten")
                                     - cmb_KapaSort:
                                         Control: ComboBox
                                         Properties:
@@ -733,7 +733,7 @@ Screens:
                                           Font: =Font.'Open Sans'
                                           FontWeight: =FontWeight.Bold
                                           Size: =14
-                                          Text: =Switch(varAuslFilter, "Alle", "Alle Einsätze", "Auslaufende Projekte")
+                                          Text: =Switch(varAuslFilter, "Alle", "Alle Einsaetze", "Auslaufende Projekte")
                                     - grp_AuslCountPill:
                                         Control: GroupContainer
                                         Variant: ManualLayout

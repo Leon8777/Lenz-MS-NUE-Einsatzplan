@@ -442,7 +442,7 @@ Screens:
                         OnSelect: |-
                           =// Pflichtfelder pruefen
                           If(IsBlank(txt_Name.Value) || IsBlank(txt_Kunde.Value) || IsBlank(dte_Laufzeit.SelectedDate) || IsBlank(cmb_Projektleiter.Selected.Mail),
-                              Set(varValidationMsg, "Bitte alle Pflichtfelder ausfüllen."),
+                              Set(varValidationMsg, "Bitte alle Pflichtfelder ausfuellen."),
                               If(dte_Laufzeit.SelectedDate < Today(),
                                   Set(varValidationMsg, "Enddatum muss in der Zukunft liegen."),
                                   If(!IsBlank(dte_Start.SelectedDate) && dte_Start.SelectedDate > dte_Laufzeit.SelectedDate,
@@ -477,7 +477,7 @@ Screens:
                                           Set(varMaxLoadAtSi, Coalesce(Max(ForAll(Filter(colOtherOverlap, NormStart > varSnew) As d, { Load: varAnew + RoundDown(Sum(Filter(colOtherOverlap, NormStart <= d.NormStart && Laufzeit >= d.NormStart), AuslastungPct), 0) }), Load), 0));
                                           Set(varMaxLoad, Max(varLoadAtSnew, varMaxLoadAtSi));
                                           If(varMaxLoad > 100,
-                                              Set(varValidationMsg, "Im Zeitraum " & Text(varSnew, "[$-de-DE]dd.mm.yyyy") & " bis " & Text(varEnew, "[$-de-DE]dd.mm.yyyy") & " wären bis zu " & varMaxLoad & " % gleichzeitig belegt (max 100 %)."),
+                                              Set(varValidationMsg, "Im Zeitraum " & Text(varSnew, "[$-de-DE]dd.mm.yyyy") & " bis " & Text(varEnew, "[$-de-DE]dd.mm.yyyy") & " waeren bis zu " & varMaxLoad & " % gleichzeitig belegt (max 100 %)."),
                                               Set(varValidationMsg, "");
                                               If(varFormMode = "Edit",
                                                   Patch('MS-NUE-Einsatzplan', varSelectedItem, { Name: txt_Name.Value, Kunde: txt_Kunde.Value, Startdatum: dte_Start.SelectedDate, Laufzeit: dte_Laufzeit.SelectedDate, AuslastungVorher: Coalesce(varSelectedItem.Auslastung, 0), Auslastung: num_Auslastung.Value / 100, Projektleiter: { '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedUser", Claims: "i:0#.f|membership|" & Lower(cmb_Projektleiter.Selected.Mail), Department: "", DisplayName: cmb_Projektleiter.Selected.DisplayName, Email: Lower(cmb_Projektleiter.Selected.Mail), JobTitle: "", Picture: "" } }),
