@@ -671,7 +671,6 @@ Screens:
                                           Size: =10
                                           Text: |
                                             =If(ThisItem.GesamtVorher > 0, "Vorheriger Wert: " & (100 - ThisItem.GesamtVorher) & " %", "Vorheriger Wert: —")
-                                          Visible: =true
                                           Width: =200
                                           X: =Parent.TemplateWidth - 270
                                           Y: =22
@@ -684,7 +683,6 @@ Screens:
                                           Size: =9
                                           Text: |
                                             =If(IsBlank(ThisItem.StandModified), "Stand: —", "Stand: " & Text(ThisItem.StandModified, "[$-de-DE]dd.mm.yyyy hh:mm"))
-                                          Visible: =true
                                           Width: =200
                                           X: =Parent.TemplateWidth - 270
                                           Y: =40
@@ -939,7 +937,6 @@ Screens:
                                                 Size: =11
                                                 Text: |
                                                   =RoundDown(ThisItem.Auslastung * 100, 0) & " %"
-                                                VerticalAlign: =VerticalAlign.Middle
                                                 Width: =118
                                     - grp_AuslDiffPill:
                                         Control: GroupContainer
@@ -969,5 +966,4 @@ Screens:
                                                 Size: =11
                                                 Text: |
                                                   ="Noch " & DateDiff(Today(), ThisItem.Laufzeit, TimeUnit.Days) & " Tage"
-                                                VerticalAlign: =VerticalAlign.Middle
                                                 Width: =118
