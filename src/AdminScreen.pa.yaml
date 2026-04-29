@@ -924,7 +924,7 @@ Screens:
                                           RadiusTopRight: =999
                                           Width: =118
                                           X: =Parent.TemplateWidth - 134
-                                          Y: =8
+                                          Y: =12
                                         Children:
                                           - lbl_AuslPct:
                                               Control: Label
@@ -953,7 +953,7 @@ Screens:
                                           RadiusTopRight: =999
                                           Width: =118
                                           X: =Parent.TemplateWidth - 134
-                                          Y: =40
+                                          Y: =44
                                         Children:
                                           - lbl_AuslDiff:
                                               Control: Label
