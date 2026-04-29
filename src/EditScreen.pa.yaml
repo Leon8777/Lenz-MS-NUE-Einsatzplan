@@ -457,24 +457,26 @@ Screens:
                                           Set(varEnew, dte_Laufzeit.SelectedDate);
                                           Set(varAnew, num_Auslastung.Value);
                                           // Schritt 1: SP-Query (delegierbar) - alle Eintraege des Users mit Laufzeit >= Start des neuen Zeitraums
+                                          // Direkter Vergleich hier ist OK: SP-Offset auf Laufzeit ist immer in die "include"-Richtung biased
                                           ClearCollect(
                                               colMyAllForOverlap,
                                               Filter('MS-NUE-Einsatzplan', Person.Email = varCurrentUser.Email && Laufzeit >= varSnew)
                                           );
-                                          // Schritt 2: Komplexer Filter clientseitig (Edit-Exclusion + Coalesce-Startdatum)
+                                          // Schritt 2: Komplexer Filter clientseitig - alle Vergleiche per DateDiff
+                                          // (TimeUnit.Days ignoriert Time-Component und ist robust gegen SP-UTC-Offset)
                                           ClearCollect(
                                               colOtherOverlap,
                                               AddColumns(
                                                   Filter(colMyAllForOverlap,
                                                       If(varFormMode = "Edit" && !IsBlank(varSelectedItem), ID <> varSelectedItem.ID, true)
-                                                      && Coalesce(Startdatum, varSnew) <= varEnew
+                                                      && DateDiff(Coalesce(Startdatum, varSnew), varEnew, TimeUnit.Days) >= 0
                                                   ),
                                                   NormStart, Coalesce(Startdatum, varSnew),
                                                   AuslastungPct, Auslastung * 100
                                               )
                                           );
-                                          Set(varLoadAtSnew, varAnew + RoundDown(Sum(Filter(colOtherOverlap, NormStart <= varSnew && Laufzeit >= varSnew), AuslastungPct), 0));
-                                          Set(varMaxLoadAtSi, Coalesce(Max(ForAll(Filter(colOtherOverlap, NormStart > varSnew) As d, { Load: varAnew + RoundDown(Sum(Filter(colOtherOverlap, NormStart <= d.NormStart && Laufzeit >= d.NormStart), AuslastungPct), 0) }), Load), 0));
+                                          Set(varLoadAtSnew, varAnew + RoundDown(Sum(Filter(colOtherOverlap, DateDiff(NormStart, varSnew, TimeUnit.Days) >= 0 && DateDiff(varSnew, Laufzeit, TimeUnit.Days) >= 0), AuslastungPct), 0));
+                                          Set(varMaxLoadAtSi, Coalesce(Max(ForAll(Filter(colOtherOverlap, DateDiff(varSnew, NormStart, TimeUnit.Days) > 0) As d, { Load: varAnew + RoundDown(Sum(Filter(colOtherOverlap, DateDiff(NormStart, d.NormStart, TimeUnit.Days) >= 0 && DateDiff(d.NormStart, Laufzeit, TimeUnit.Days) >= 0), AuslastungPct), 0) }), Load), 0));
                                           Set(varMaxLoad, Max(varLoadAtSnew, varMaxLoadAtSi));
                                           If(varMaxLoad > 100,
                                               Set(varValidationMsg, "Im Zeitraum " & Text(varSnew, "[$-de-DE]dd.mm.yyyy") & " bis " & Text(varEnew, "[$-de-DE]dd.mm.yyyy") & " waeren bis zu " & varMaxLoad & " % gleichzeitig belegt (max 100 %)."),
