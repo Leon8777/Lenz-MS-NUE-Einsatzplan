@@ -935,11 +935,11 @@ Screens:
                                                 Color: =RGBA(0, 75, 141, 1)
                                                 Font: =Font.'Open Sans'
                                                 FontWeight: =FontWeight.Bold
-                                                Height: =Parent.Height
+                                                Height: =26
                                                 Size: =11
                                                 Text: |
-                                                  =RoundDown(ThisItem.Auslastung * 100, 0) & " % Auslastung"
-                                                Width: =Parent.Width
+                                                  =RoundDown(ThisItem.Auslastung * 100, 0) & " %"
+                                                Width: =118
                                     - grp_AuslDiffPill:
                                         Control: GroupContainer
                                         Variant: ManualLayout
