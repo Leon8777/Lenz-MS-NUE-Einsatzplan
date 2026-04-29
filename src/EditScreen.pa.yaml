@@ -301,7 +301,7 @@ Screens:
                                           Appearance: ='NumberInput.Appearance'.Outline
                                           FontSize: =13
                                           Height: =34
-                                          Max: =100
+                                          Max: =120
                                           Min: =0
                                           Step: =5
                                           Value: =ctxAuslastung
@@ -447,8 +447,8 @@ Screens:
                                   Set(varValidationMsg, "Enddatum muss in der Zukunft liegen."),
                                   If(!IsBlank(dte_Start.SelectedDate) && dte_Start.SelectedDate > dte_Laufzeit.SelectedDate,
                                       Set(varValidationMsg, "Startdatum darf nicht nach dem Enddatum liegen."),
-                                      If(num_Auslastung.Value < 0 || num_Auslastung.Value > 100,
-                                          Set(varValidationMsg, "Auslastung muss zwischen 0 und 100 liegen."),
+                                      If(num_Auslastung.Value < 0 || num_Auslastung.Value > 120,
+                                          Set(varValidationMsg, "Auslastung muss zwischen 0 und 120 liegen."),
                                           // Overlap-aware Pruefung: in jedem Tag des Zeitraums [S_new, E_new]
                                           // darf die Tages-Auslastung 100 % nicht ueberschreiten.
                                           // Maxima koennen nur an Tag-Grenzen auftreten -> wir pruefen S_new
@@ -478,8 +478,8 @@ Screens:
                                           Set(varLoadAtSnew, varAnew + RoundDown(Sum(Filter(colOtherOverlap, DateDiff(NormStart, varSnew, TimeUnit.Days) >= 0 && DateDiff(varSnew, Laufzeit, TimeUnit.Days) >= 0), AuslastungPct), 0));
                                           Set(varMaxLoadAtSi, Coalesce(Max(ForAll(Filter(colOtherOverlap, DateDiff(varSnew, NormStart, TimeUnit.Days) > 0) As d, { Load: varAnew + RoundDown(Sum(Filter(colOtherOverlap, DateDiff(NormStart, d.NormStart, TimeUnit.Days) >= 0 && DateDiff(d.NormStart, Laufzeit, TimeUnit.Days) >= 0), AuslastungPct), 0) }), Load), 0));
                                           Set(varMaxLoad, Max(varLoadAtSnew, varMaxLoadAtSi));
-                                          If(varMaxLoad > 100,
-                                              Set(varValidationMsg, "Im Zeitraum " & Text(varSnew, "[$-de-DE]dd.mm.yyyy") & " bis " & Text(varEnew, "[$-de-DE]dd.mm.yyyy") & " waeren bis zu " & varMaxLoad & " % gleichzeitig belegt (max 100 %)."),
+                                          If(varMaxLoad > 120,
+                                              Set(varValidationMsg, "Im Zeitraum " & Text(varSnew, "[$-de-DE]dd.mm.yyyy") & " bis " & Text(varEnew, "[$-de-DE]dd.mm.yyyy") & " wären bis zu " & varMaxLoad & " % gleichzeitig belegt (max 120 %)."),
                                               Set(varValidationMsg, "");
                                               If(varFormMode = "Edit",
                                                   Patch('MS-NUE-Einsatzplan', varSelectedItem, { Name: txt_Name.Value, Kunde: txt_Kunde.Value, Startdatum: dte_Start.SelectedDate, Laufzeit: dte_Laufzeit.SelectedDate, AuslastungVorher: Coalesce(varSelectedItem.Auslastung, 0), Auslastung: num_Auslastung.Value / 100, Projektleiter: { '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedUser", Claims: "i:0#.f|membership|" & Lower(cmb_Projektleiter.Selected.Mail), Department: "", DisplayName: cmb_Projektleiter.Selected.DisplayName, Email: Lower(cmb_Projektleiter.Selected.Mail), JobTitle: "", Picture: "" } }),
