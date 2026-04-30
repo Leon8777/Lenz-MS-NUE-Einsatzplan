@@ -295,16 +295,14 @@ Screens:
                                           Size: =11
                                           Text: ="Auslastung in % *"
                                     - num_Auslastung:
-                                        Control: NumberInput
+                                        Control: TextInput
                                         Properties:
-                                          AlignInContainer: =AlignInContainer.Stretch
-                                          Appearance: ='NumberInput.Appearance'.Outline
+                                          Appearance: ='TextInputCanvas.Appearance'.Outline
+                                          Font: =Font.'Open Sans'
                                           FontSize: =13
                                           Height: =34
-                                          Max: =100
-                                          Min: =0
-                                          Step: =5
-                                          Value: =ctxAuslastung
+                                          Placeholder: ="z. B. 100"
+                                          Value: =Text(ctxAuslastung)
                         - grp_RowProjektleiter:
                             Control: GroupContainer
                             Variant: AutoLayout
@@ -336,7 +334,7 @@ Screens:
                                     Height: =34
                                     InputTextPlaceholder: ="Projektleiter suchen"
                                     Items: |
-                                      =Office365Users.SearchUser({searchTerm: cmb_Projektleiter.SearchText, top: 20})
+                                      =If(Len(cmb_Projektleiter.SearchText) < 1, Filter(Office365Users.SearchUser({searchTerm: "."}), false), Office365Users.SearchUser({searchTerm: cmb_Projektleiter.SearchText, top: 20}))
                                   Children:
                                     - DisplayName1:
                                         Control: ComboBoxDataField
@@ -441,21 +439,21 @@ Screens:
                         Icon: ="Checkmark"
                         OnSelect: |-
                           =// Pflichtfelder pruefen
-                          If(IsBlank(txt_Name.Value) || IsBlank(txt_Kunde.Value) || IsBlank(dte_Laufzeit.SelectedDate) || IsBlank(cmb_Projektleiter.Selected.Mail),
+                          If(IsBlank(txt_Name.Value) || IsBlank(txt_Kunde.Value) || IsBlank(dte_Laufzeit.SelectedDate) || IsBlank(cmb_Projektleiter.Selected.Mail) || IsBlank(num_Auslastung.Value),
                               Set(varValidationMsg, "Bitte alle Pflichtfelder ausfuellen."),
                               If(dte_Laufzeit.SelectedDate < Today(),
                                   Set(varValidationMsg, "Enddatum muss in der Zukunft liegen."),
                                   If(!IsBlank(dte_Start.SelectedDate) && dte_Start.SelectedDate > dte_Laufzeit.SelectedDate,
                                       Set(varValidationMsg, "Startdatum darf nicht nach dem Enddatum liegen."),
-                                      If(num_Auslastung.Value < 0 || num_Auslastung.Value > 100,
-                                          Set(varValidationMsg, "Auslastung muss zwischen 0 und 100 liegen."),
+                                      If(!IsNumeric(num_Auslastung.Value) || Value(num_Auslastung.Value) < 0 || Value(num_Auslastung.Value) > 120,
+                                          Set(varValidationMsg, "Auslastung muss eine Zahl zwischen 0 und 120 sein."),
                                           // Overlap-aware Pruefung: in jedem Tag des Zeitraums [S_new, E_new]
                                           // darf die Tages-Auslastung 100 % nicht ueberschreiten.
                                           // Maxima koennen nur an Tag-Grenzen auftreten -> wir pruefen S_new
                                           // und jeden Start-Termin eines existierenden Einsatzes innerhalb (S_new, E_new].
                                           Set(varSnew, Coalesce(dte_Start.SelectedDate, Today()));
                                           Set(varEnew, dte_Laufzeit.SelectedDate);
-                                          Set(varAnew, num_Auslastung.Value);
+                                          Set(varAnew, Value(num_Auslastung.Value));
                                           // Schritt 1: SP-Query (delegierbar) - alle Eintraege des Users mit Laufzeit >= Start des neuen Zeitraums
                                           // Direkter Vergleich hier ist OK: SP-Offset auf Laufzeit ist immer in die "include"-Richtung biased
                                           ClearCollect(
@@ -478,12 +476,12 @@ Screens:
                                           Set(varLoadAtSnew, varAnew + RoundDown(Sum(Filter(colOtherOverlap, DateDiff(NormStart, varSnew, TimeUnit.Days) >= 0 && DateDiff(varSnew, Laufzeit, TimeUnit.Days) >= 0), AuslastungPct), 0));
                                           Set(varMaxLoadAtSi, Coalesce(Max(ForAll(Filter(colOtherOverlap, DateDiff(varSnew, NormStart, TimeUnit.Days) > 0) As d, { Load: varAnew + RoundDown(Sum(Filter(colOtherOverlap, DateDiff(NormStart, d.NormStart, TimeUnit.Days) >= 0 && DateDiff(d.NormStart, Laufzeit, TimeUnit.Days) >= 0), AuslastungPct), 0) }), Load), 0));
                                           Set(varMaxLoad, Max(varLoadAtSnew, varMaxLoadAtSi));
-                                          If(varMaxLoad > 100,
-                                              Set(varValidationMsg, "Im Zeitraum " & Text(varSnew, "[$-de-DE]dd.mm.yyyy") & " bis " & Text(varEnew, "[$-de-DE]dd.mm.yyyy") & " waeren bis zu " & varMaxLoad & " % gleichzeitig belegt (max 100 %)."),
+                                          If(varMaxLoad > 120,
+                                              Set(varValidationMsg, "Im Zeitraum " & Text(varSnew, "[$-de-DE]dd.mm.yyyy") & " bis " & Text(varEnew, "[$-de-DE]dd.mm.yyyy") & " wären bis zu " & varMaxLoad & " % gleichzeitig belegt (max 120 %)."),
                                               Set(varValidationMsg, "");
                                               If(varFormMode = "Edit",
-                                                  Patch('MS-NUE-Einsatzplan', varSelectedItem, { Name: txt_Name.Value, Kunde: txt_Kunde.Value, Startdatum: dte_Start.SelectedDate, Laufzeit: dte_Laufzeit.SelectedDate, AuslastungVorher: Coalesce(varSelectedItem.Auslastung, 0), Auslastung: num_Auslastung.Value / 100, Projektleiter: { '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedUser", Claims: "i:0#.f|membership|" & Lower(cmb_Projektleiter.Selected.Mail), Department: "", DisplayName: cmb_Projektleiter.Selected.DisplayName, Email: Lower(cmb_Projektleiter.Selected.Mail), JobTitle: "", Picture: "" } }),
-                                                  Patch('MS-NUE-Einsatzplan', Defaults('MS-NUE-Einsatzplan'), { Name: txt_Name.Value, Kunde: txt_Kunde.Value, Startdatum: dte_Start.SelectedDate, Laufzeit: dte_Laufzeit.SelectedDate, Auslastung: num_Auslastung.Value / 100, Person: { '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedUser", Claims: "i:0#.f|membership|" & Lower(varCurrentUser.Email), Department: "", DisplayName: varCurrentUser.FullName, Email: Lower(varCurrentUser.Email), JobTitle: "", Picture: "" }, Projektleiter: { '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedUser", Claims: "i:0#.f|membership|" & Lower(cmb_Projektleiter.Selected.Mail), Department: "", DisplayName: cmb_Projektleiter.Selected.DisplayName, Email: Lower(cmb_Projektleiter.Selected.Mail), JobTitle: "", Picture: "" } })
+                                                  Patch('MS-NUE-Einsatzplan', varSelectedItem, { Name: txt_Name.Value, Kunde: txt_Kunde.Value, Startdatum: dte_Start.SelectedDate, Laufzeit: dte_Laufzeit.SelectedDate, AuslastungVorher: Coalesce(varSelectedItem.Auslastung, 0), Auslastung: Value(num_Auslastung.Value) / 100, Projektleiter: { '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedUser", Claims: "i:0#.f|membership|" & Lower(cmb_Projektleiter.Selected.Mail), Department: "", DisplayName: cmb_Projektleiter.Selected.DisplayName, Email: Lower(cmb_Projektleiter.Selected.Mail), JobTitle: "", Picture: "" } }),
+                                                  Patch('MS-NUE-Einsatzplan', Defaults('MS-NUE-Einsatzplan'), { Name: txt_Name.Value, Kunde: txt_Kunde.Value, Startdatum: dte_Start.SelectedDate, Laufzeit: dte_Laufzeit.SelectedDate, Auslastung: Value(num_Auslastung.Value) / 100, Person: { '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedUser", Claims: "i:0#.f|membership|" & Lower(varCurrentUser.Email), Department: "", DisplayName: varCurrentUser.FullName, Email: Lower(varCurrentUser.Email), JobTitle: "", Picture: "" }, Projektleiter: { '@odata.type': "#Microsoft.Azure.Connectors.SharePoint.SPListExpandedUser", Claims: "i:0#.f|membership|" & Lower(cmb_Projektleiter.Selected.Mail), Department: "", DisplayName: cmb_Projektleiter.Selected.DisplayName, Email: Lower(cmb_Projektleiter.Selected.Mail), JobTitle: "", Picture: "" } })
                                               );
                                               Notify(If(varFormMode="Edit", "Eintrag aktualisiert", "Eintrag angelegt"), NotificationType.Success);
                                               Navigate(UserScreen, ScreenTransition.UnCover)
