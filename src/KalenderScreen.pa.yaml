@@ -126,6 +126,7 @@ Screens:
                   - htm_Kalender:
                       Control: HtmlViewer
                       Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
                         FillPortions: =1
                         Font: =Font.'Open Sans'
                         HtmlText: |-
@@ -156,3 +157,5 @@ Screens:
                               "</tr>"
                           ) &
                           "</tbody></table>"
+                        PaddingLeft: =0
+                        PaddingRight: =0
