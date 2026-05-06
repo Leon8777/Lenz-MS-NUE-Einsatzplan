@@ -96,7 +96,7 @@ App:
       Set(
           varExcludedNames,
           [
-              "Tönges Kolja Uwe",
+              "Kolja Uwe Tönges",
               "Stefan Gick"
           ]
       )
