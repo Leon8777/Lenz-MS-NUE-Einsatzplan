@@ -164,17 +164,6 @@ Screens:
                         Size: =11
                         Text: ="● 0 % ausgelastet"
                         Width: =160
-                  - lbl_KalDebug:
-                      Control: Label
-                      Properties:
-                        Color: =RGBA(100, 116, 139, 1)
-                        Font: =Font.'Open Sans'
-                        FontWeight: =FontWeight.Semibold
-                        Height: =20
-                        Size: =11
-                        Text: |
-                          ="Members: " & CountRows(colCalMembers) & " | KWs: " & CountRows(colCalKWs) & " | Einträge: " & CountRows(colCalEintraege) & " | GroupId: " & Coalesce(varMSNUEGroupId, "(leer)")
-                        Width: =800
                   - btn_KalRefresh:
                       Control: Button
                       Properties:
@@ -194,6 +183,17 @@ Screens:
                           Notify("Reload: " & CountRows(colCalMembers) & " Members", NotificationType.Information)
                         Text: ="↻ Reload"
                         Width: =100
+                  - lbl_KalDebug:
+                      Control: Label
+                      Properties:
+                        Color: =RGBA(100, 116, 139, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =20
+                        Size: =11
+                        Text: |
+                          ="Members: " & CountRows(colCalMembers) & " | KWs: " & CountRows(colCalKWs) & " | Einträge: " & CountRows(colCalEintraege) & " | GroupId: " & Coalesce(varMSNUEGroupId, "(leer)")
+                        Width: =800
             - grp_KalBody:
                 Control: GroupContainer
                 Variant: AutoLayout
@@ -211,6 +211,7 @@ Screens:
                   - htm_Kalender:
                       Control: HtmlViewer
                       Properties:
+                        FillPortions: =1
                         Font: =Font.'Open Sans'
                         HtmlText: |-
                           ="<table style='border-collapse:collapse;font-family:Open Sans,Segoe UI,Arial;font-size:11px;width:max-content'>" &
