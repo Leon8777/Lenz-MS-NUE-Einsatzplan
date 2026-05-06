@@ -126,13 +126,10 @@ Screens:
                   - htm_Kalender:
                       Control: HtmlViewer
                       Properties:
-                        AlignInContainer: =AlignInContainer.Stretch
-                        FillPortions: =
+                        FillPortions: =1
                         Font: =Font.'Open Sans'
-                        Height: =Parent.Height - 8
                         HtmlText: |-
-                          ="<div style='width:100%;height:100%;overflow:auto'>" &
-                          "<table style='border-collapse:separate;border-spacing:0;font-family:Open Sans,Segoe UI,Arial;font-size:11px;width:max-content;margin-right:32px'>" &
+                          ="<table style='border-collapse:separate;border-spacing:0;font-family:Open Sans,Segoe UI,Arial;font-size:11px;width:max-content;margin-right:32px'>" &
                           "<thead><tr>" &
                           "<th style='padding:6px 8px;border:1px solid #e2e8f0;background:#e2e8f0;font-weight:700;text-align:left;min-width:160px;position:sticky;top:0;left:0;z-index:30'>Mitarbeiter</th>" &
                           Concat(colCalKWs As wk, "<th style='padding:4px 6px;border:1px solid #e2e8f0;background:#f1f5f9;font-weight:600;color:#0f172a;position:sticky;top:0;z-index:20'>KW" & wk.Value & "</th>") &
@@ -158,8 +155,4 @@ Screens:
                               "<td style='min-width:80px;border:0;background:transparent'></td>" &
                               "</tr>"
                           ) &
-                          "</tbody></table>" &
-                          "</div>"
-                        PaddingLeft: =0
-                        PaddingRight: =0
-                        Width: =Parent.Width - 32
+                          "</tbody></table>"
