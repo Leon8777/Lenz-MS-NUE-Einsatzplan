@@ -10,7 +10,8 @@ Screens:
         // Schritt 1: Server-seitiger Filter (delegierbar)
         ClearCollect(colLaufendeEintraege, Filter('MS-NUE-Einsatzplan', Laufzeit >= Today()));
         // Schritt 2: Startdatum-Check clientseitig (DateDiff ignoriert Time-Component)
-        ClearCollect(colAktiveEintraege, Filter(colLaufendeEintraege, IsBlank(Startdatum) || DateDiff(Today(), Startdatum, TimeUnit.Days) <= 0));
+        // + ausgeschlossene E-Mails (varExcludedEmails) rausfiltern
+        ClearCollect(colAktiveEintraege, Filter(colLaufendeEintraege, (IsBlank(Startdatum) || DateDiff(Today(), Startdatum, TimeUnit.Days) <= 0) && IsBlank(LookUp(varExcludedEmails, Lower(Value) = Lower(Person.Email)))));
         ClearCollect(
             colAktiveFlat,
             AddColumns(
@@ -37,6 +38,7 @@ Screens:
             Filter(
                 colGroupMembers,
                 !IsBlank(PersonEmail) And Len(PersonEmail) > 0
+                And IsBlank(LookUp(varExcludedEmails, Lower(Value) = PersonEmail))
             )
         );
         // Aktuelle Auslastung pro MA (nur aus aktiven Eintraegen aggregiert)
@@ -225,10 +227,10 @@ Screens:
                               OnSelect: |-
                                 =Refresh('MS-NUE-Einsatzplan');
                                 ClearCollect(colLaufendeEintraege, Filter('MS-NUE-Einsatzplan', Laufzeit >= Today()));
-                                ClearCollect(colAktiveEintraege, Filter(colLaufendeEintraege, IsBlank(Startdatum) || DateDiff(Today(), Startdatum, TimeUnit.Days) <= 0));
+                                ClearCollect(colAktiveEintraege, Filter(colLaufendeEintraege, (IsBlank(Startdatum) || DateDiff(Today(), Startdatum, TimeUnit.Days) <= 0) && IsBlank(LookUp(varExcludedEmails, Lower(Value) = Lower(Person.Email)))));
                                 ClearCollect(colAktiveFlat, AddColumns(colAktiveEintraege, PersonName, Person.DisplayName, PersonEmail, Lower(Person.Email), AuslastungPct, Auslastung * 100, AuslastungVorherPct, Coalesce(AuslastungVorher, 0) * 100));
                                 ClearCollect(colGroupMembers, AddColumns(Office365Groups.ListGroupMembers(varMSNUEGroupId).value, PersonName, displayName, PersonEmail, Lower(mail), PersonSurname, Coalesce(surname, displayName)));
-                                ClearCollect(colAlleUser, Filter(colGroupMembers, !IsBlank(PersonEmail) And Len(PersonEmail) > 0));
+                                ClearCollect(colAlleUser, Filter(colGroupMembers, !IsBlank(PersonEmail) And Len(PersonEmail) > 0 And IsBlank(LookUp(varExcludedEmails, Lower(Value) = PersonEmail))));
                                 ClearCollect(colAuslastungProMA, AddColumns(GroupBy(colAktiveFlat, PersonEmail, PersonName, Eintraege), GesamtAuslastung, RoundDown(Sum(Eintraege, AuslastungPct), 0), FreieKapa, 100 - RoundDown(Sum(Eintraege, AuslastungPct), 0), GesamtVorher, RoundDown(Sum(Eintraege, AuslastungVorherPct), 0), FreieKapaVorher, 100 - RoundDown(Sum(Eintraege, AuslastungVorherPct), 0), StandModified, Max(Eintraege, Modified)));
                                 ClearCollect(colFreieKapa, Filter(ForAll(colAlleUser As u, With({aus: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtAuslastung), 0), vorher: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtVorher), 0), stand: LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, StandModified)}, {PersonName: u.PersonName, PersonEmail: u.PersonEmail, PersonSurname: u.PersonSurname, GesamtAuslastung: aus, FreieKapa: 100 - aus, GesamtVorher: vorher, FreieKapaVorher: 100 - vorher, StandModified: stand})), GesamtAuslastung < 100));
                                 ClearCollect(colAlleKapa, ForAll(colAlleUser As u, With({aus: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtAuslastung), 0), vorher: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtVorher), 0), stand: LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, StandModified)}, {PersonName: u.PersonName, PersonEmail: u.PersonEmail, PersonSurname: u.PersonSurname, GesamtAuslastung: aus, FreieKapa: 100 - aus, GesamtVorher: vorher, FreieKapaVorher: 100 - vorher, StandModified: stand})))
@@ -822,7 +824,7 @@ Screens:
                                   Properties:
                                     Fill: =RGBA(255, 255, 255, 1)
                                     Height: =Parent.Height - 98
-                                    Items: =If(varAuslFilter = "Alle", Sort(Filter('MS-NUE-Einsatzplan', Laufzeit >= Today()), Person.DisplayName), SortByColumns(Filter('MS-NUE-Einsatzplan', Laufzeit >= Today()), "Laufzeit", SortOrder.Ascending))
+                                    Items: =Filter(If(varAuslFilter = "Alle", Sort(Filter('MS-NUE-Einsatzplan', Laufzeit >= Today()), Person.DisplayName), SortByColumns(Filter('MS-NUE-Einsatzplan', Laufzeit >= Today()), "Laufzeit", SortOrder.Ascending)), IsBlank(LookUp(varExcludedEmails, Lower(Value) = Lower(Person.Email))))
                                     LayoutMinHeight: =320
                                     TemplatePadding: =4
                                     TemplateSize: =82

@@ -335,7 +335,7 @@ Screens:
                                     Height: =34
                                     InputTextPlaceholder: ="Projektleiter suchen"
                                     Items: |
-                                      =If(Len(cmb_Projektleiter.SearchText) < 1, Filter(Office365Users.SearchUser({searchTerm: "."}), false), Office365Users.SearchUser({searchTerm: cmb_Projektleiter.SearchText, top: 20}))
+                                      =If(Len(cmb_Projektleiter.SearchText) < 1, Filter(Office365Users.SearchUser({searchTerm: "."}), false), Filter(Office365Users.SearchUser({searchTerm: cmb_Projektleiter.SearchText, top: 20}), IsBlank(LookUp(varExcludedEmails, Lower(Value) = Lower(Mail)))))
                                     Width: =txt_Kunde.Width
                                   Children:
                                     - Mail1:
