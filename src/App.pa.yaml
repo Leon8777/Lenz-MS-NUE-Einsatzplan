@@ -87,7 +87,7 @@ App:
       Set(
           varExcludedEmails,
           [
-              "Kolja.Markwardt@adesso.de",
+              "Kolja-uwe.toenges@adesso.de",
               "Stefan.Gick@adesso.de"
           ]
       );
@@ -96,7 +96,7 @@ App:
       Set(
           varExcludedNames,
           [
-              "Kolja Markwardt",
+              "Tönges Kolja Uwe",
               "Stefan Gick"
           ]
       )
