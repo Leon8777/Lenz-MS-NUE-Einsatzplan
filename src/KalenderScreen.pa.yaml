@@ -1,0 +1,210 @@
+Screens:
+  KalenderScreen:
+    Properties:
+      Fill: =RGBA(248, 250, 252, 1)
+      OnVisible: |-
+        =// 1. Wochenanfang (Montag dieser Woche)
+        Set(varCalStart, DateAdd(Today(), -(Weekday(Today(), StartOfWeek.Monday) - 1), TimeUnit.Days));
+        // 2. 26 Wochen × 5 Werktage = 130 Tage; Mo-Fr; Wochenenden uebersprungen
+        ClearCollect(
+            colCalDays,
+            ForAll(
+                Sequence(130, 0) As n,
+                With(
+                    { d: DateAdd(varCalStart, n.Value + RoundDown(n.Value / 5, 0) * 2, TimeUnit.Days) },
+                    {
+                        Date: d,
+                        DateKey: Text(d, "yyyy-mm-dd"),
+                        KW: WeekNum(d, StartOfWeek.Monday),
+                        DayOfWeek: Mod(n.Value, 5)
+                    }
+                )
+            )
+        );
+        ClearCollect(colCalKWs, Distinct(colCalDays, KW));
+        // 3. Aktive Eintraege im Sichtbereich (Laufzeit >= varCalStart)
+        ClearCollect(
+            colCalEintraege,
+            Filter('MS-NUE-Einsatzplan', Laufzeit >= varCalStart)
+        );
+        // 4. Group-Members alphabetisch nach Nachname
+        ClearCollect(
+            colCalMembers,
+            SortByColumns(
+                Filter(
+                    AddColumns(
+                        Office365Groups.ListGroupMembers(varMSNUEGroupId).value,
+                        PersonName, displayName,
+                        PersonEmail, Lower(mail),
+                        PersonSurname, Coalesce(surname, displayName)
+                    ),
+                    !IsBlank(PersonEmail) And Len(PersonEmail) > 0
+                ),
+                "PersonSurname"
+            )
+        )
+    Children:
+      - grp_KalRoot:
+          Control: GroupContainer
+          Variant: AutoLayout
+          Properties:
+            DropShadow: =DropShadow.None
+            Fill: =RGBA(248, 250, 252, 1)
+            Height: =Parent.Height
+            LayoutAlignItems: =LayoutAlignItems.Stretch
+            LayoutDirection: =LayoutDirection.Vertical
+            Width: =Parent.Width
+          Children:
+            - grp_KalHeaderWrap:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  FillPortions: =0
+                  Height: =47
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutMinHeight: =47
+                Children:
+                  - grp_KalHeader:
+                      Control: GroupContainer
+                      Variant: AutoLayout
+                      Properties:
+                        DropShadow: =DropShadow.None
+                        Fill: =RGBA(0, 110, 199, 1)
+                        FillPortions: =0
+                        Height: =44
+                        LayoutAlignItems: =LayoutAlignItems.Center
+                        LayoutDirection: =LayoutDirection.Horizontal
+                        LayoutGap: =12
+                        LayoutMinHeight: =44
+                        PaddingBottom: =6
+                        PaddingLeft: =18
+                        PaddingRight: =18
+                        PaddingTop: =6
+                      Children:
+                        - ico_KalBack_Btn:
+                            Control: Button
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Subtle
+                              BasePaletteColor: =RGBA(255, 255, 255, 1)
+                              FontColor: =RGBA(255, 255, 255, 1)
+                              Height: =30
+                              Icon: ="ChevronLeft"
+                              Layout: ='ButtonCanvas.Layout'.IconOnly
+                              OnSelect: =Navigate(AdminScreen, ScreenTransition.UnCover)
+                              Width: =32
+                        - lbl_KalHeaderTitle:
+                            Control: Label
+                            Properties:
+                              Color: =RGBA(255, 255, 255, 1)
+                              FillPortions: =1
+                              Font: =Font.'Open Sans'
+                              FontWeight: =FontWeight.Bold
+                              Height: =32
+                              Size: =16
+                              Text: ="Auslastungs-Kalender (26 Wochen)"
+                  - rec_KalHeaderAccent:
+                      Control: Rectangle
+                      Properties:
+                        Fill: =RGBA(136, 125, 117, 1)
+                        Height: =3
+            - grp_KalLegend:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(248, 250, 252, 1)
+                  FillPortions: =0
+                  Height: =40
+                  LayoutAlignItems: =LayoutAlignItems.Center
+                  LayoutDirection: =LayoutDirection.Horizontal
+                  LayoutGap: =16
+                  LayoutMinHeight: =40
+                  PaddingLeft: =16
+                  PaddingRight: =16
+                Children:
+                  - lbl_LegendTitle:
+                      Control: Label
+                      Properties:
+                        Color: =RGBA(71, 85, 105, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =20
+                        Size: =11
+                        Text: ="Legende:"
+                        Width: =64
+                  - lbl_LegendGruen:
+                      Control: Label
+                      Properties:
+                        Color: =RGBA(22, 163, 74, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =20
+                        Size: =11
+                        Text: ="● 100 % ausgelastet"
+                        Width: =160
+                  - lbl_LegendGelb:
+                      Control: Label
+                      Properties:
+                        Color: =RGBA(202, 138, 4, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =20
+                        Size: =11
+                        Text: ="● 1–99 % ausgelastet"
+                        Width: =160
+                  - lbl_LegendRot:
+                      Control: Label
+                      Properties:
+                        Color: =RGBA(220, 38, 38, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =20
+                        Size: =11
+                        Text: ="● 0 % ausgelastet"
+                        Width: =160
+            - grp_KalBody:
+                Control: GroupContainer
+                Variant: AutoLayout
+                Properties:
+                  DropShadow: =DropShadow.None
+                  Fill: =RGBA(248, 250, 252, 1)
+                  LayoutAlignItems: =LayoutAlignItems.Stretch
+                  LayoutDirection: =LayoutDirection.Vertical
+                  LayoutMinHeight: =0
+                  PaddingBottom: =14
+                  PaddingLeft: =16
+                  PaddingRight: =16
+                  PaddingTop: =4
+                Children:
+                  - htm_Kalender:
+                      Control: HtmlViewer
+                      Properties:
+                        Font: =Font.'Open Sans'
+                        HtmlText: |-
+                          ="<table style='border-collapse:collapse;font-family:Open Sans,Segoe UI,Arial;font-size:11px;width:max-content'>" &
+                          "<thead><tr>" &
+                          "<th style='padding:6px 8px;border:1px solid #e2e8f0;background:#e2e8f0;font-weight:700;text-align:left;min-width:160px'>Mitarbeiter</th>" &
+                          Concat(colCalKWs As wk, "<th style='padding:4px 6px;border:1px solid #e2e8f0;background:#f1f5f9;font-weight:600;color:#0f172a'>KW" & wk.Value & "</th>") &
+                          "</tr></thead><tbody>" &
+                          Concat(
+                              colCalMembers As member,
+                              "<tr><td style='padding:4px 8px;border:1px solid #e2e8f0;background:#f8fafc;text-align:left;font-weight:600;color:#0f172a'>" & member.PersonName & "</td>" &
+                              Concat(
+                                  colCalKWs As wk,
+                                  "<td style='padding:3px 4px;border:1px solid #e2e8f0;white-space:nowrap'>" &
+                                  Concat(
+                                      Filter(colCalDays, KW = wk.Value) As dy,
+                                      With(
+                                          { load: RoundDown(Sum(Filter(colCalEintraege, Person.Email = member.PersonEmail && Coalesce(Startdatum, dy.Date) <= dy.Date && Laufzeit >= dy.Date), Auslastung) * 100, 0) },
+                                          "<span style='display:inline-block;width:5px;height:18px;margin:0 1px;border-radius:1px;background:" &
+                                          If(load >= 100, "#16a34a", If(load > 0, "#facc15", "#ef4444")) &
+                                          "'></span>"
+                                      )
+                                  ) &
+                                  "</td>"
+                              ) &
+                              "</tr>"
+                          ) &
+                          "</tbody></table>"

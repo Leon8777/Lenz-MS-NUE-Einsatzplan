@@ -197,6 +197,20 @@ Screens:
                               OnSelect: =Launch("https://o365adessogroup.sharepoint.com/sites/MicrosoftNrnberg/Lists/MSNUEEinsatzplan/AllItems.aspx", {}, LaunchTarget.New)
                               Text: ="SharePoint"
                               Width: =128
+                        - btn_Kalender:
+                            Control: Button
+                            Properties:
+                              Appearance: ='ButtonCanvas.Appearance'.Subtle
+                              BasePaletteColor: =RGBA(255, 255, 255, 1)
+                              BorderRadius: =8
+                              Font: =Font.'Open Sans'
+                              FontColor: =RGBA(255, 255, 255, 1)
+                              FontSize: =12
+                              FontWeight: =FontWeight.Semibold
+                              Icon: ="Calendar"
+                              OnSelect: =Navigate(KalenderScreen, ScreenTransition.Cover)
+                              Text: ="Kalender"
+                              Width: =128
                         - btn_Refresh:
                             Control: Button
                             Properties:
