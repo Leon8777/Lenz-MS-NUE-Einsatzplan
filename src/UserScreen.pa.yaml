@@ -584,7 +584,7 @@ Screens:
                         FontWeight: =FontWeight.Bold
                         Height: =30
                         Size: =20
-                        Text: ="Eintrag loeschen?"
+                        Text: ="Eintrag löschen?"
                         Width: =404
                         X: =28
                         Y: =24
@@ -645,8 +645,8 @@ Screens:
                           Set(varMeineFreieKapa, Max(0, 100 - varMeineAuslastung));
                           Set(varShowDeleteDialog, false);
                           Set(varItemToDelete, Blank());
-                          Notify("Eintrag geloescht", NotificationType.Success)
-                        Text: ="Loeschen"
+                          Notify("Eintrag gelöscht", NotificationType.Success)
+                        Text: ="Löschen"
                         Width: =128
                         X: =318
                         Y: =178

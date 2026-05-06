@@ -442,7 +442,7 @@ Screens:
                         OnSelect: |-
                           =// Pflichtfelder pruefen
                           If(IsBlank(txt_Name.Value) || IsBlank(txt_Kunde.Value) || IsBlank(dte_Laufzeit.SelectedDate) || IsBlank(cmb_Projektleiter.Selected.Mail) || IsBlank(num_Auslastung.Value),
-                              Set(varValidationMsg, "Bitte alle Pflichtfelder ausfuellen."),
+                              Set(varValidationMsg, "Bitte alle Pflichtfelder ausfüllen."),
                               If(dte_Laufzeit.SelectedDate < Today(),
                                   Set(varValidationMsg, "Enddatum muss in der Zukunft liegen."),
                                   If(!IsBlank(dte_Start.SelectedDate) && dte_Start.SelectedDate > dte_Laufzeit.SelectedDate,
