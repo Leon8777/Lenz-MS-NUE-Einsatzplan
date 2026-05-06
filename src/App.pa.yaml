@@ -90,6 +90,15 @@ App:
               "Kolja.Markwardt@adesso.de",
               "Stefan.Gick@adesso.de"
           ]
+      );
+      // Zusaetzliche Namen-Ausschlussliste (Fallback, falls die Mail-Schreibweise
+      // abweicht). Vergleich ist case-insensitive und exakt auf den DisplayName.
+      Set(
+          varExcludedNames,
+          [
+              "Kolja Markwardt",
+              "Stefan Gick"
+          ]
       )
     StartScreen: =SplashScreen
     Theme: =PowerAppsTheme
