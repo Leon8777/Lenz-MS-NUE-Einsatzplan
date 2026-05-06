@@ -124,46 +124,6 @@ Screens:
                   PaddingLeft: =16
                   PaddingRight: =16
                 Children:
-                  - lbl_LegendTitle:
-                      Control: Label
-                      Properties:
-                        Color: =RGBA(71, 85, 105, 1)
-                        Font: =Font.'Open Sans'
-                        FontWeight: =FontWeight.Semibold
-                        Height: =20
-                        Size: =11
-                        Text: ="Legende:"
-                        Width: =64
-                  - lbl_LegendGruen:
-                      Control: Label
-                      Properties:
-                        Color: =RGBA(22, 163, 74, 1)
-                        Font: =Font.'Open Sans'
-                        FontWeight: =FontWeight.Semibold
-                        Height: =20
-                        Size: =11
-                        Text: ="● 100 % ausgelastet"
-                        Width: =160
-                  - lbl_LegendGelb:
-                      Control: Label
-                      Properties:
-                        Color: =RGBA(202, 138, 4, 1)
-                        Font: =Font.'Open Sans'
-                        FontWeight: =FontWeight.Semibold
-                        Height: =20
-                        Size: =11
-                        Text: ="● 1–99 % ausgelastet"
-                        Width: =160
-                  - lbl_LegendRot:
-                      Control: Label
-                      Properties:
-                        Color: =RGBA(220, 38, 38, 1)
-                        Font: =Font.'Open Sans'
-                        FontWeight: =FontWeight.Semibold
-                        Height: =20
-                        Size: =11
-                        Text: ="● 0 % ausgelastet"
-                        Width: =160
                   - btn_KalRefresh:
                       Control: Button
                       Properties:
@@ -228,7 +188,7 @@ Screens:
                                   Concat(
                                       Filter(colCalDays, KW = wk.Value) As dy,
                                       With(
-                                          { load: RoundDown(Sum(Filter(colCalEintraege, Person.Email = member.PersonEmail && Coalesce(Startdatum, dy.Date) <= dy.Date && Laufzeit >= dy.Date), Auslastung) * 100, 0) },
+                                          { load: RoundDown(Sum(Filter(colCalEintraege, Lower(Person.Email) = member.PersonEmail && Coalesce(Startdatum, dy.Date) <= dy.Date && Laufzeit >= dy.Date), Auslastung) * 100, 0) },
                                           "<span style='display:inline-block;width:5px;height:18px;margin:0 1px;border-radius:1px;background:" &
                                           If(load >= 100, "#16a34a", If(load > 0, "#facc15", "#ef4444")) &
                                           "'></span>"
