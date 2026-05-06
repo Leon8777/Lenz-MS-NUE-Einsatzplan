@@ -164,6 +164,36 @@ Screens:
                         Size: =11
                         Text: ="● 0 % ausgelastet"
                         Width: =160
+                  - lbl_KalDebug:
+                      Control: Label
+                      Properties:
+                        Color: =RGBA(100, 116, 139, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =20
+                        Size: =11
+                        Text: |
+                          ="Members: " & CountRows(colCalMembers) & " | KWs: " & CountRows(colCalKWs) & " | Einträge: " & CountRows(colCalEintraege) & " | GroupId: " & Coalesce(varMSNUEGroupId, "(leer)")
+                        Width: =800
+                  - btn_KalRefresh:
+                      Control: Button
+                      Properties:
+                        Appearance: ='ButtonCanvas.Appearance'.Outline
+                        BasePaletteColor: =RGBA(0, 75, 141, 1)
+                        BorderRadius: =6
+                        Font: =Font.'Open Sans'
+                        FontColor: =RGBA(0, 75, 141, 1)
+                        FontSize: =11
+                        Height: =28
+                        OnSelect: |-
+                          =Set(varCalStart, DateAdd(Today(), -(Weekday(Today(), StartOfWeek.Monday) - 1), TimeUnit.Days));
+                          ClearCollect(colCalDays, ForAll(Sequence(130, 0) As n, With({d: DateAdd(varCalStart, n.Value + RoundDown(n.Value / 5, 0) * 2, TimeUnit.Days)}, {Date: d, DateKey: Text(d, "yyyy-mm-dd"), KW: WeekNum(d, StartOfWeek.Monday), DayOfWeek: Mod(n.Value, 5)})));
+                          ClearCollect(colCalKWs, Distinct(colCalDays, KW));
+                          ClearCollect(colCalEintraege, Filter('MS-NUE-Einsatzplan', Laufzeit >= varCalStart));
+                          ClearCollect(colCalMembers, SortByColumns(Filter(AddColumns(Office365Groups.ListGroupMembers(varMSNUEGroupId).value, PersonName, displayName, PersonEmail, Lower(mail), PersonSurname, Coalesce(surname, displayName)), !IsBlank(PersonEmail) And Len(PersonEmail) > 0), "PersonSurname"));
+                          Notify("Reload: " & CountRows(colCalMembers) & " Members", NotificationType.Information)
+                        Text: ="↻ Reload"
+                        Width: =100
             - grp_KalBody:
                 Control: GroupContainer
                 Variant: AutoLayout
