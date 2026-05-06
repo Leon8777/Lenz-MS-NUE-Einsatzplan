@@ -126,9 +126,10 @@ Screens:
                   - htm_Kalender:
                       Control: HtmlViewer
                       Properties:
+                        AlignInContainer: =AlignInContainer.Stretch
+                        FillPortions: =
                         Font: =Font.'Open Sans'
                         Height: =Parent.Height - 8
-                        Width: =Parent.Width - 32
                         HtmlText: |-
                           ="<div style='width:100%;height:100%;overflow:auto'>" &
                           "<table style='border-collapse:separate;border-spacing:0;font-family:Open Sans,Segoe UI,Arial;font-size:11px;width:max-content;margin-right:32px'>" &
@@ -159,3 +160,6 @@ Screens:
                           ) &
                           "</tbody></table>" &
                           "</div>"
+                        PaddingLeft: =0
+                        PaddingRight: =0
+                        Width: =Parent.Width - 32
