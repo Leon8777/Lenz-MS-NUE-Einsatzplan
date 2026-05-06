@@ -326,6 +326,7 @@ Screens:
                               - cmb_Projektleiter:
                                   Control: ComboBox
                                   Properties:
+                                    AlignInContainer: =AlignInContainer.Start
                                     Appearance: ='ComboboxCanvas.Appearance'.Outline
                                     DefaultSelectedItems: |
                                       =If(!IsBlank(ctxProjektleiterEmail), Office365Users.SearchUser({searchTerm: ctxProjektleiterEmail, top: 1}), Blank())
@@ -335,16 +336,8 @@ Screens:
                                     InputTextPlaceholder: ="Projektleiter suchen"
                                     Items: |
                                       =If(Len(cmb_Projektleiter.SearchText) < 1, Filter(Office365Users.SearchUser({searchTerm: "."}), false), Office365Users.SearchUser({searchTerm: cmb_Projektleiter.SearchText, top: 20}))
+                                    Width: =txt_Kunde.Width
                                   Children:
-                                    - DisplayName1:
-                                        Control: ComboBoxDataField
-                                        Variant: textualColumn
-                                        IsLocked: true
-                                        Properties:
-                                          FieldDisplayName: ="DisplayName"
-                                          FieldName: ="DisplayName"
-                                          FieldType: ="s"
-                                          Order: =1
                                     - Mail1:
                                         Control: ComboBoxDataField
                                         Variant: textualColumn
@@ -354,6 +347,15 @@ Screens:
                                           FieldName: ="Mail"
                                           FieldType: ="s"
                                           Order: =2
+                                    - DisplayName1:
+                                        Control: ComboBoxDataField
+                                        Variant: textualColumn
+                                        IsLocked: true
+                                        Properties:
+                                          FieldDisplayName: ="DisplayName"
+                                          FieldName: ="DisplayName"
+                                          FieldType: ="s"
+                                          Order: =1
                         - grp_Validation:
                             Control: GroupContainer
                             Variant: AutoLayout
