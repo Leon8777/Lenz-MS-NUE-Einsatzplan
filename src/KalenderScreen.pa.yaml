@@ -109,51 +109,6 @@ Screens:
                       Properties:
                         Fill: =RGBA(136, 125, 117, 1)
                         Height: =3
-            - grp_KalLegend:
-                Control: GroupContainer
-                Variant: AutoLayout
-                Properties:
-                  DropShadow: =DropShadow.None
-                  Fill: =RGBA(248, 250, 252, 1)
-                  FillPortions: =0
-                  Height: =40
-                  LayoutAlignItems: =LayoutAlignItems.Center
-                  LayoutDirection: =LayoutDirection.Horizontal
-                  LayoutGap: =16
-                  LayoutMinHeight: =40
-                  PaddingLeft: =16
-                  PaddingRight: =16
-                Children:
-                  - btn_KalRefresh:
-                      Control: Button
-                      Properties:
-                        Appearance: ='ButtonCanvas.Appearance'.Outline
-                        BasePaletteColor: =RGBA(0, 75, 141, 1)
-                        BorderRadius: =6
-                        Font: =Font.'Open Sans'
-                        FontColor: =RGBA(0, 75, 141, 1)
-                        FontSize: =11
-                        Height: =28
-                        OnSelect: |-
-                          =Set(varCalStart, DateAdd(Today(), -(Weekday(Today(), StartOfWeek.Monday) - 1), TimeUnit.Days));
-                          ClearCollect(colCalDays, ForAll(Sequence(130, 0) As n, With({d: DateAdd(varCalStart, n.Value + RoundDown(n.Value / 5, 0) * 2, TimeUnit.Days)}, {Date: d, DateKey: Text(d, "yyyy-mm-dd"), KW: WeekNum(d, StartOfWeek.Monday), DayOfWeek: Mod(n.Value, 5)})));
-                          ClearCollect(colCalKWs, Distinct(colCalDays, KW));
-                          ClearCollect(colCalEintraege, Filter('MS-NUE-Einsatzplan', Laufzeit >= varCalStart));
-                          ClearCollect(colCalMembers, SortByColumns(Filter(AddColumns(Office365Groups.ListGroupMembers(varMSNUEGroupId).value, PersonName, displayName, PersonEmail, Lower(mail), PersonSurname, Coalesce(surname, displayName)), !IsBlank(PersonEmail) And Len(PersonEmail) > 0), "PersonSurname"));
-                          Notify("Reload: " & CountRows(colCalMembers) & " Members", NotificationType.Information)
-                        Text: ="↻ Reload"
-                        Width: =100
-                  - lbl_KalDebug:
-                      Control: Label
-                      Properties:
-                        Color: =RGBA(100, 116, 139, 1)
-                        Font: =Font.'Open Sans'
-                        FontWeight: =FontWeight.Semibold
-                        Height: =20
-                        Size: =11
-                        Text: |
-                          ="Members: " & CountRows(colCalMembers) & " | KWs: " & CountRows(colCalKWs) & " | Einträge: " & CountRows(colCalEintraege) & " | GroupId: " & Coalesce(varMSNUEGroupId, "(leer)")
-                        Width: =800
             - grp_KalBody:
                 Control: GroupContainer
                 Variant: AutoLayout
@@ -174,14 +129,14 @@ Screens:
                         FillPortions: =1
                         Font: =Font.'Open Sans'
                         HtmlText: |-
-                          ="<table style='border-collapse:collapse;font-family:Open Sans,Segoe UI,Arial;font-size:11px;width:max-content'>" &
+                          ="<table style='border-collapse:separate;border-spacing:0;font-family:Open Sans,Segoe UI,Arial;font-size:11px;width:max-content'>" &
                           "<thead><tr>" &
-                          "<th style='padding:6px 8px;border:1px solid #e2e8f0;background:#e2e8f0;font-weight:700;text-align:left;min-width:160px'>Mitarbeiter</th>" &
-                          Concat(colCalKWs As wk, "<th style='padding:4px 6px;border:1px solid #e2e8f0;background:#f1f5f9;font-weight:600;color:#0f172a'>KW" & wk.Value & "</th>") &
+                          "<th style='padding:6px 8px;border:1px solid #e2e8f0;background:#e2e8f0;font-weight:700;text-align:left;min-width:160px;position:sticky;top:0;left:0;z-index:30'>Mitarbeiter</th>" &
+                          Concat(colCalKWs As wk, "<th style='padding:4px 6px;border:1px solid #e2e8f0;background:#f1f5f9;font-weight:600;color:#0f172a;position:sticky;top:0;z-index:20'>KW" & wk.Value & "</th>") &
                           "</tr></thead><tbody>" &
                           Concat(
                               colCalMembers As member,
-                              "<tr><td style='padding:4px 8px;border:1px solid #e2e8f0;background:#f8fafc;text-align:left;font-weight:600;color:#0f172a'>" & member.PersonName & "</td>" &
+                              "<tr><td style='padding:4px 8px;border:1px solid #e2e8f0;background:#f8fafc;text-align:left;font-weight:600;color:#0f172a;position:sticky;left:0;z-index:10'>" & member.PersonName & "</td>" &
                               Concat(
                                   colCalKWs As wk,
                                   "<td style='padding:3px 4px;border:1px solid #e2e8f0;white-space:nowrap'>" &
