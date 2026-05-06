@@ -36,7 +36,8 @@ Screens:
                         Office365Groups.ListGroupMembers(varMSNUEGroupId).value,
                         PersonName, displayName,
                         PersonEmail, Lower(mail),
-                        PersonSurname, Coalesce(surname, displayName)
+                        PersonSurname, Coalesce(surname, displayName),
+                        PersonId, id
                     ),
                     !IsBlank(PersonEmail) And Len(PersonEmail) > 0
                 ),
@@ -138,7 +139,7 @@ Screens:
                           "</tr></thead><tbody>" &
                           Concat(
                               colCalMembers As member,
-                              "<tr><td style='padding:4px 8px;border:1px solid #e2e8f0;background:#f8fafc;text-align:left;font-weight:600;color:#0f172a;position:sticky;left:0;z-index:10'>" & member.PersonName & "</td>" &
+                              "<tr><td style='padding:4px 8px;border:1px solid #e2e8f0;background:#f8fafc;text-align:left;font-weight:600;color:#0f172a;position:sticky;left:0;z-index:10'>" & member.PersonName & "<div style='font-weight:400;font-size:9px;color:#64748b;margin-top:2px'>" & Coalesce(member.PersonId, "(keine ID)") & "</div></td>" &
                               Concat(
                                   colCalKWs As wk,
                                   "<td style='padding:3px 4px;border:1px solid #e2e8f0;white-space:nowrap'>" &
