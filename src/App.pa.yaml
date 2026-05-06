@@ -80,6 +80,16 @@ App:
       Set(
           varMSNUEGroupId,
           "efa1fe67-dd01-4e88-96e0-44be42a46139"
+      );
+      // Ausschluss-Liste: hier E-Mail-Adressen eintragen, die NICHT im Kalender / in den
+      // Admin-Auswertungen erscheinen sollen (z.B. Funktions-Postfaecher, Praktikanten,
+      // Personen ohne Einsatzplan-Pflicht). Vergleich ist case-insensitive.
+      Set(
+          varExcludedEmails,
+          [
+              "Kolja.Markwardt@adesso.de",
+              "Stefan.Gick@adesso.de"
+          ]
       )
     StartScreen: =SplashScreen
     Theme: =PowerAppsTheme

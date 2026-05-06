@@ -28,6 +28,7 @@ Screens:
             Filter('MS-NUE-Einsatzplan', Laufzeit >= varCalStart)
         );
         // 4. Group-Members alphabetisch nach Nachname
+        // Ausgeschlossene E-Mails (varExcludedEmails) werden hier rausgefiltert.
         ClearCollect(
             colCalMembers,
             SortByColumns(
@@ -39,6 +40,7 @@ Screens:
                         PersonSurname, Coalesce(surname, displayName)
                     ),
                     !IsBlank(PersonEmail) And Len(PersonEmail) > 0
+                    And IsBlank(LookUp(varExcludedEmails, Lower(Value) = PersonEmail))
                 ),
                 "PersonSurname"
             )
