@@ -129,12 +129,11 @@ Screens:
                         FillPortions: =1
                         Font: =Font.'Open Sans'
                         HtmlText: |-
-                          ="<div style='overflow:auto;width:100%;height:100%'>" &
-                          "<table style='border-collapse:separate;border-spacing:0;font-family:Open Sans,Segoe UI,Arial;font-size:11px;width:max-content;margin-right:64px'>" &
+                          ="<table style='border-collapse:separate;border-spacing:0;font-family:Open Sans,Segoe UI,Arial;font-size:11px;width:max-content;margin-right:32px'>" &
                           "<thead><tr>" &
                           "<th style='padding:6px 8px;border:1px solid #e2e8f0;background:#e2e8f0;font-weight:700;text-align:left;min-width:160px;position:sticky;top:0;left:0;z-index:30'>Mitarbeiter</th>" &
                           Concat(colCalKWs As wk, "<th style='padding:4px 6px;border:1px solid #e2e8f0;background:#f1f5f9;font-weight:600;color:#0f172a;position:sticky;top:0;z-index:20'>KW" & wk.Value & "</th>") &
-                          "<th style='min-width:48px;border:0;background:transparent;position:sticky;top:0;z-index:20'></th>" &
+                          "<th style='min-width:80px;border:0;background:transparent;position:sticky;top:0;z-index:20'></th>" &
                           "</tr></thead><tbody>" &
                           Concat(
                               colCalMembers As member,
@@ -153,8 +152,7 @@ Screens:
                                   ) &
                                   "</td>"
                               ) &
-                              "<td style='min-width:48px;border:0;background:transparent'></td>" &
+                              "<td style='min-width:80px;border:0;background:transparent'></td>" &
                               "</tr>"
                           ) &
-                          "</tbody></table>" &
-                          "</div>"
+                          "</tbody></table>"
