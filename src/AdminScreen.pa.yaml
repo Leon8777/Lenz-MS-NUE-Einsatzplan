@@ -489,16 +489,42 @@ Screens:
                                     Height: =16
                                     Size: =10
                                     Text: ="Freie Kapazitäten"
-                              - lbl_StatFreiValue:
-                                  Control: Label
+                              - grp_StatFreiRow:
+                                  Control: GroupContainer
+                                  Variant: AutoLayout
                                   Properties:
                                     AlignInContainer: =AlignInContainer.Stretch
-                                    Color: =RGBA(220, 38, 38, 1)
-                                    Font: =Font.'Open Sans'
-                                    FontWeight: =FontWeight.Bold
+                                    DropShadow: =DropShadow.None
+                                    FillPortions: =0
                                     Height: =32
-                                    Size: =22
-                                    Text: =Text(CountRows(colFreieKapa))
+                                    LayoutAlignItems: =LayoutAlignItems.Center
+                                    LayoutDirection: =LayoutDirection.Horizontal
+                                    LayoutGap: =10
+                                    LayoutMinHeight: =32
+                                  Children:
+                                    - lbl_StatFreiValue:
+                                        Control: Label
+                                        Properties:
+                                          Color: =RGBA(46, 160, 67, 1)
+                                          FillPortions: =0
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =32
+                                          LayoutMinWidth: =42
+                                          Size: =22
+                                          Text: =Text(CountRows(colFreieKapa))
+                                          Width: =42
+                                    - lbl_StatFreiBreakdown:
+                                        Control: Label
+                                        Properties:
+                                          Color: =RGBA(15, 23, 42, 1)
+                                          FillPortions: =1
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Semibold
+                                          Height: =32
+                                          Size: =13
+                                          Text: =Text(CountRows(Filter(colFreieKapa, GesamtAuslastung = 0))) & " voll + " & Text(CountRows(Filter(colFreieKapa, GesamtAuslastung > 0))) & " teilweise"
+                                          VerticalAlign: =VerticalAlign.Middle
                         - grp_StatAlert:
                             Control: GroupContainer
                             Variant: AutoLayout
