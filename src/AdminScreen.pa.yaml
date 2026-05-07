@@ -149,6 +149,25 @@ Screens:
                 DisplayName,
                 SortOrder.Ascending
             )
+        );
+        // Gruppierte Daten fuer "Alle Einsaetze"-Ansicht: pro Person 1 Eintrag mit
+        // Sub-Tabelle 'Eintraege', die alle Projekte dieser Person enthaelt.
+        ClearCollect(
+            colAlleEinsaetzeGruppiert,
+            GroupBy(
+                AddColumns(
+                    Filter(
+                        colLaufendeEintraege,
+                        IsBlank(LookUp(varExcludedEmails, Lower(Value) = Lower(Person.Email))) And
+                        IsBlank(LookUp(varExcludedNames, Lower(Value) = Lower(Person.DisplayName)))
+                    ),
+                    PersonName, Person.DisplayName,
+                    PersonEmail, Lower(Person.Email)
+                ),
+                PersonEmail,
+                PersonName,
+                Eintraege
+            )
         )
     Children:
       - grp_AdminRoot:
@@ -260,7 +279,8 @@ Screens:
                                 ClearCollect(colAuslastungProMA, AddColumns(GroupBy(colAktiveFlat, PersonEmail, PersonName, Eintraege), GesamtAuslastung, RoundDown(Sum(Eintraege, AuslastungPct), 0), FreieKapa, 100 - RoundDown(Sum(Eintraege, AuslastungPct), 0), GesamtVorher, RoundDown(Sum(Eintraege, AuslastungVorherPct), 0), FreieKapaVorher, 100 - RoundDown(Sum(Eintraege, AuslastungVorherPct), 0), StandModified, Max(Eintraege, Modified)));
                                 ClearCollect(colFreieKapa, Filter(ForAll(colAlleUser As u, With({aus: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtAuslastung), 0), vorher: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtVorher), 0), stand: LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, StandModified)}, {PersonName: u.PersonName, PersonEmail: u.PersonEmail, PersonSurname: u.PersonSurname, GesamtAuslastung: aus, FreieKapa: 100 - aus, GesamtVorher: vorher, FreieKapaVorher: 100 - vorher, StandModified: stand})), GesamtAuslastung < 100));
                                 ClearCollect(colAlleKapa, ForAll(colAlleUser As u, With({aus: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtAuslastung), 0), vorher: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtVorher), 0), stand: LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, StandModified)}, {PersonName: u.PersonName, PersonEmail: u.PersonEmail, PersonSurname: u.PersonSurname, GesamtAuslastung: aus, FreieKapa: 100 - aus, GesamtVorher: vorher, FreieKapaVorher: 100 - vorher, StandModified: stand})));
-                                ClearCollect(colAuslPersons, Sort(ForAll(Distinct(Filter(colLaufendeEintraege, IsBlank(LookUp(varExcludedEmails, Lower(Value) = Lower(Person.Email))) And IsBlank(LookUp(varExcludedNames, Lower(Value) = Lower(Person.DisplayName)))), Person.DisplayName) As p, {DisplayName: p.Value, PersonEmail: Lower(LookUp(colLaufendeEintraege, Person.DisplayName = p.Value).Person.Email)}), DisplayName, SortOrder.Ascending))
+                                ClearCollect(colAuslPersons, Sort(ForAll(Distinct(Filter(colLaufendeEintraege, IsBlank(LookUp(varExcludedEmails, Lower(Value) = Lower(Person.Email))) And IsBlank(LookUp(varExcludedNames, Lower(Value) = Lower(Person.DisplayName)))), Person.DisplayName) As p, {DisplayName: p.Value, PersonEmail: Lower(LookUp(colLaufendeEintraege, Person.DisplayName = p.Value).Person.Email)}), DisplayName, SortOrder.Ascending));
+                                ClearCollect(colAlleEinsaetzeGruppiert, GroupBy(AddColumns(Filter(colLaufendeEintraege, IsBlank(LookUp(varExcludedEmails, Lower(Value) = Lower(Person.Email))) And IsBlank(LookUp(varExcludedNames, Lower(Value) = Lower(Person.DisplayName)))), PersonName, Person.DisplayName, PersonEmail, Lower(Person.Email)), PersonEmail, PersonName, Eintraege))
                               Text: ="Aktualisieren"
                               Width: =128
                   - rec_AdminHeaderAccent:
@@ -905,10 +925,11 @@ Screens:
                                   Properties:
                                     Fill: =RGBA(255, 255, 255, 1)
                                     Height: =Parent.Height - 98
-                                    Items: =Filter(If(varAuslFilter = "Alle", Sort(Filter('MS-NUE-Einsatzplan', Laufzeit >= Today()), Person.DisplayName), SortByColumns(Filter('MS-NUE-Einsatzplan', Laufzeit >= Today()), "Laufzeit", SortOrder.Ascending)), IsBlank(LookUp(varExcludedEmails, Lower(Value) = Lower(Person.Email))) And IsBlank(LookUp(varExcludedNames, Lower(Value) = Lower(Person.DisplayName))) And (IsBlank(varAuslPersonFilter) Or Lower(Person.Email) = varAuslPersonFilter))
+                                    Items: =Filter(SortByColumns(Filter('MS-NUE-Einsatzplan', Laufzeit >= Today()), "Laufzeit", SortOrder.Ascending), IsBlank(LookUp(varExcludedEmails, Lower(Value) = Lower(Person.Email))) And IsBlank(LookUp(varExcludedNames, Lower(Value) = Lower(Person.DisplayName))) And (IsBlank(varAuslPersonFilter) Or Lower(Person.Email) = varAuslPersonFilter))
                                     LayoutMinHeight: =320
                                     TemplatePadding: =4
                                     TemplateSize: =82
+                                    Visible: =varAuslFilter = "Auslaufend"
                                     Width: =Parent.Width - 32
                                   Children:
                                     - grp_AuslCard:
@@ -1064,3 +1085,202 @@ Screens:
                                                 Text: |
                                                   ="Noch " & DateDiff(Today(), ThisItem.Laufzeit, TimeUnit.Days) & " Tage"
                                                 Width: =118
+                              - gal_AlleEinsaetzeGroup:
+                                  Control: Gallery
+                                  Variant: Vertical
+                                  Properties:
+                                    Fill: =RGBA(255, 255, 255, 1)
+                                    Height: =Parent.Height - 98
+                                    Items: =Sort(Filter(colAlleEinsaetzeGruppiert, IsBlank(varAuslPersonFilter) Or PersonEmail = varAuslPersonFilter), PersonName, SortOrder.Ascending)
+                                    LayoutMinHeight: =320
+                                    TemplatePadding: =4
+                                    TemplateSize: =320
+                                    Visible: =varAuslFilter = "Alle"
+                                    Width: =Parent.Width - 32
+                                  Children:
+                                    - grp_GroupCard:
+                                        Control: GroupContainer
+                                        Variant: ManualLayout
+                                        Properties:
+                                          BorderColor: =RGBA(226, 232, 240, 1)
+                                          BorderThickness: =1
+                                          DropShadow: =DropShadow.None
+                                          Fill: =RGBA(248, 250, 252, 1)
+                                          Height: =312
+                                          RadiusBottomLeft: =10
+                                          RadiusBottomRight: =10
+                                          RadiusTopLeft: =10
+                                          RadiusTopRight: =10
+                                          Width: =Parent.TemplateWidth
+                                          Y: =4
+                                        Children:
+                                          - rec_GroupAccent:
+                                              Control: Rectangle
+                                              Properties:
+                                                Fill: =RGBA(0, 75, 141, 1)
+                                                Height: =312
+                                                Width: =4
+                                    - grp_GroupAvatar:
+                                        Control: GroupContainer
+                                        Variant: ManualLayout
+                                        Properties:
+                                          Fill: =RGBA(0, 75, 141, 1)
+                                          Height: =40
+                                          RadiusBottomLeft: =999
+                                          RadiusBottomRight: =999
+                                          RadiusTopLeft: =999
+                                          RadiusTopRight: =999
+                                          Width: =40
+                                          X: =14
+                                          Y: =14
+                                        Children:
+                                          - lbl_GroupInitial:
+                                              Control: Label
+                                              Properties:
+                                                Align: =Align.Center
+                                                Color: =RGBA(255, 255, 255, 1)
+                                                Font: =Font.'Open Sans'
+                                                FontWeight: =FontWeight.Bold
+                                                Size: =14
+                                                Text: =Upper(Left(ThisItem.PersonName, 1))
+                                                Width: =40
+                                          - img_GroupPhoto:
+                                              Control: Image
+                                              Properties:
+                                                Height: =40
+                                                Image: =If(IsBlank(ThisItem.PersonEmail), Blank(), Office365Users.UserPhoto(ThisItem.PersonEmail))
+                                                ImagePosition: =ImagePosition.Fill
+                                                RadiusBottomLeft: =999
+                                                RadiusBottomRight: =999
+                                                RadiusTopLeft: =999
+                                                RadiusTopRight: =999
+                                                Visible: =!IsBlank(ThisItem.PersonEmail)
+                                                Width: =40
+                                    - lbl_GroupName:
+                                        Control: Label
+                                        Properties:
+                                          Color: =RGBA(15, 23, 42, 1)
+                                          Font: =Font.'Open Sans'
+                                          FontWeight: =FontWeight.Bold
+                                          Height: =22
+                                          Size: =14
+                                          Text: =ThisItem.PersonName
+                                          Width: =Parent.TemplateWidth - 200
+                                          X: =64
+                                          Y: =16
+                                    - lbl_GroupCount:
+                                        Control: Label
+                                        Properties:
+                                          Color: =RGBA(100, 116, 139, 1)
+                                          Font: =Font.'Open Sans'
+                                          Height: =16
+                                          Size: =10
+                                          Text: |
+                                            =CountRows(ThisItem.Eintraege) & " " & If(CountRows(ThisItem.Eintraege) = 1, "Projekt", "Projekte")
+                                          Width: =Parent.TemplateWidth - 200
+                                          X: =64
+                                          Y: =38
+                                    - gal_GroupEintraege:
+                                        Control: Gallery
+                                        Variant: Vertical
+                                        Properties:
+                                          Fill: =RGBA(255, 255, 255, 1)
+                                          Height: =244
+                                          Items: =SortByColumns(ThisItem.Eintraege, "Laufzeit", SortOrder.Ascending)
+                                          ShowScrollbar: =true
+                                          TemplatePadding: =2
+                                          TemplateSize: =60
+                                          Width: =Parent.TemplateWidth - 16
+                                          X: =8
+                                          Y: =64
+                                        Children:
+                                          - rec_GroupItemAccent:
+                                              Control: Rectangle
+                                              Properties:
+                                                Fill: =If(DateDiff(Today(), ThisItem.Laufzeit, TimeUnit.Days) < 14, RGBA(220, 38, 38, 1), RGBA(0, 75, 141, 1))
+                                                Height: =56
+                                                Width: =3
+                                                Y: =2
+                                          - lbl_GroupItemKunde:
+                                              Control: Label
+                                              Properties:
+                                                Color: =RGBA(0, 75, 141, 1)
+                                                Font: =Font.'Open Sans'
+                                                FontWeight: =FontWeight.Semibold
+                                                Height: =18
+                                                Size: =11
+                                                Text: |-
+                                                  =ThisItem.Kunde & " / (PL: " & ThisItem.Projektleiter.DisplayName & ")"
+                                                Width: =Parent.TemplateWidth - 280
+                                                X: =14
+                                                Y: =8
+                                          - lbl_GroupItemEnde:
+                                              Control: Label
+                                              Properties:
+                                                Color: =RGBA(100, 116, 139, 1)
+                                                Font: =Font.'Open Sans'
+                                                Height: =16
+                                                Size: =10
+                                                Text: |
+                                                  =Text(ThisItem.Startdatum, "[$-de-DE]dd.mm.yyyy") & " – " & Text(ThisItem.Laufzeit, "[$-de-DE]dd.mm.yyyy")
+                                                Width: =Parent.TemplateWidth - 280
+                                                X: =14
+                                                Y: =30
+                                          - grp_GroupItemPctPill:
+                                              Control: GroupContainer
+                                              Variant: ManualLayout
+                                              Properties:
+                                                BorderColor: =RGBA(147, 197, 253, 1)
+                                                BorderThickness: =1
+                                                DropShadow: =DropShadow.None
+                                                Fill: =RGBA(219, 234, 254, 1)
+                                                Height: =22
+                                                RadiusBottomLeft: =999
+                                                RadiusBottomRight: =999
+                                                RadiusTopLeft: =999
+                                                RadiusTopRight: =999
+                                                Width: =100
+                                                X: =Parent.TemplateWidth - 116
+                                                Y: =8
+                                              Children:
+                                                - lbl_GroupItemPct:
+                                                    Control: Label
+                                                    Properties:
+                                                      Align: =Align.Center
+                                                      Color: =RGBA(0, 75, 141, 1)
+                                                      Font: =Font.'Open Sans'
+                                                      FontWeight: =FontWeight.Bold
+                                                      Height: =22
+                                                      Size: =11
+                                                      Text: |
+                                                        =RoundDown(ThisItem.Auslastung * 100, 0) & " %"
+                                                      Width: =100
+                                          - grp_GroupItemDiffPill:
+                                              Control: GroupContainer
+                                              Variant: ManualLayout
+                                              Properties:
+                                                BorderColor: =If(DateDiff(Today(), ThisItem.Laufzeit, TimeUnit.Days) < 14, RGBA(252, 165, 165, 1), RGBA(147, 197, 253, 1))
+                                                BorderThickness: =1
+                                                DropShadow: =DropShadow.None
+                                                Fill: =If(DateDiff(Today(), ThisItem.Laufzeit, TimeUnit.Days) < 14, RGBA(254, 226, 226, 1), RGBA(219, 234, 254, 1))
+                                                Height: =22
+                                                RadiusBottomLeft: =999
+                                                RadiusBottomRight: =999
+                                                RadiusTopLeft: =999
+                                                RadiusTopRight: =999
+                                                Width: =100
+                                                X: =Parent.TemplateWidth - 116
+                                                Y: =34
+                                              Children:
+                                                - lbl_GroupItemDiff:
+                                                    Control: Label
+                                                    Properties:
+                                                      Align: =Align.Center
+                                                      Color: =If(DateDiff(Today(), ThisItem.Laufzeit, TimeUnit.Days) < 14, RGBA(185, 28, 28, 1), RGBA(0, 75, 141, 1))
+                                                      Font: =Font.'Open Sans'
+                                                      FontWeight: =FontWeight.Bold
+                                                      Height: =22
+                                                      Size: =11
+                                                      Text: |
+                                                        ="Noch " & DateDiff(Today(), ThisItem.Laufzeit, TimeUnit.Days) & " Tage"
+                                                      Width: =100
