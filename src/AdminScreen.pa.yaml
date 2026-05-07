@@ -168,7 +168,11 @@ Screens:
                 PersonName,
                 Eintraege
             )
-        )
+        );
+        // Max. Projektanzahl pro Person -> bestimmt die einheitliche TemplateSize
+        // der gruppierten Galerie (Power Apps unterstuetzt keine pro-Zeile variable Hoehe).
+        // Pro-Person-Karte selbst ist via grp_GroupCard.Height dynamisch.
+        Set(varAlleMaxProjekte, Max(Max(colAlleEinsaetzeGruppiert, CountRows(Eintraege)), 1))
     Children:
       - grp_AdminRoot:
           Control: GroupContainer
@@ -280,7 +284,8 @@ Screens:
                                 ClearCollect(colFreieKapa, Filter(ForAll(colAlleUser As u, With({aus: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtAuslastung), 0), vorher: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtVorher), 0), stand: LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, StandModified)}, {PersonName: u.PersonName, PersonEmail: u.PersonEmail, PersonSurname: u.PersonSurname, GesamtAuslastung: aus, FreieKapa: 100 - aus, GesamtVorher: vorher, FreieKapaVorher: 100 - vorher, StandModified: stand})), GesamtAuslastung < 100));
                                 ClearCollect(colAlleKapa, ForAll(colAlleUser As u, With({aus: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtAuslastung), 0), vorher: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtVorher), 0), stand: LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, StandModified)}, {PersonName: u.PersonName, PersonEmail: u.PersonEmail, PersonSurname: u.PersonSurname, GesamtAuslastung: aus, FreieKapa: 100 - aus, GesamtVorher: vorher, FreieKapaVorher: 100 - vorher, StandModified: stand})));
                                 ClearCollect(colAuslPersons, Sort(ForAll(Distinct(Filter(colLaufendeEintraege, IsBlank(LookUp(varExcludedEmails, Lower(Value) = Lower(Person.Email))) And IsBlank(LookUp(varExcludedNames, Lower(Value) = Lower(Person.DisplayName)))), Person.DisplayName) As p, {DisplayName: p.Value, PersonEmail: Lower(LookUp(colLaufendeEintraege, Person.DisplayName = p.Value).Person.Email)}), DisplayName, SortOrder.Ascending));
-                                ClearCollect(colAlleEinsaetzeGruppiert, GroupBy(AddColumns(Filter(colLaufendeEintraege, IsBlank(LookUp(varExcludedEmails, Lower(Value) = Lower(Person.Email))) And IsBlank(LookUp(varExcludedNames, Lower(Value) = Lower(Person.DisplayName)))), PersonName, Person.DisplayName, PersonEmail, Lower(Person.Email)), PersonEmail, PersonName, Eintraege))
+                                ClearCollect(colAlleEinsaetzeGruppiert, GroupBy(AddColumns(Filter(colLaufendeEintraege, IsBlank(LookUp(varExcludedEmails, Lower(Value) = Lower(Person.Email))) And IsBlank(LookUp(varExcludedNames, Lower(Value) = Lower(Person.DisplayName)))), PersonName, Person.DisplayName, PersonEmail, Lower(Person.Email)), PersonEmail, PersonName, Eintraege));
+                                Set(varAlleMaxProjekte, Max(Max(colAlleEinsaetzeGruppiert, CountRows(Eintraege)), 1))
                               Text: ="Aktualisieren"
                               Width: =128
                   - rec_AdminHeaderAccent:
@@ -1094,7 +1099,7 @@ Screens:
                                     Items: =Sort(Filter(colAlleEinsaetzeGruppiert, IsBlank(varAuslPersonFilter) Or PersonEmail = varAuslPersonFilter), PersonName, SortOrder.Ascending)
                                     LayoutMinHeight: =320
                                     TemplatePadding: =4
-                                    TemplateSize: =320
+                                    TemplateSize: =64 + varAlleMaxProjekte * 60 + 16
                                     Visible: =varAuslFilter = "Alle"
                                     Width: =Parent.Width - 32
                                   Children:
@@ -1106,7 +1111,7 @@ Screens:
                                           BorderThickness: =1
                                           DropShadow: =DropShadow.None
                                           Fill: =RGBA(248, 250, 252, 1)
-                                          Height: =312
+                                          Height: =64 + CountRows(ThisItem.Eintraege) * 60 + 12
                                           RadiusBottomLeft: =10
                                           RadiusBottomRight: =10
                                           RadiusTopLeft: =10
@@ -1118,7 +1123,7 @@ Screens:
                                               Control: Rectangle
                                               Properties:
                                                 Fill: =RGBA(0, 75, 141, 1)
-                                                Height: =312
+                                                Height: =64 + CountRows(ThisItem.Eintraege) * 60 + 12
                                                 Width: =4
                                     - grp_GroupAvatar:
                                         Control: GroupContainer
@@ -1185,9 +1190,9 @@ Screens:
                                         Variant: Vertical
                                         Properties:
                                           Fill: =RGBA(255, 255, 255, 1)
-                                          Height: =244
+                                          Height: =CountRows(ThisItem.Eintraege) * 60 + 4
                                           Items: =SortByColumns(ThisItem.Eintraege, "Laufzeit", SortOrder.Ascending)
-                                          ShowScrollbar: =true
+                                          ShowScrollbar: =false
                                           TemplatePadding: =2
                                           TemplateSize: =60
                                           Width: =Parent.TemplateWidth - 16
@@ -1211,9 +1216,9 @@ Screens:
                                                 Size: =11
                                                 Text: |-
                                                   =ThisItem.Kunde & " / (PL: " & ThisItem.Projektleiter.DisplayName & ")"
-                                                Width: =Parent.TemplateWidth - 280
+                                                Width: =Parent.TemplateWidth - 290
                                                 X: =14
-                                                Y: =8
+                                                Y: =10
                                           - lbl_GroupItemEnde:
                                               Control: Label
                                               Properties:
@@ -1223,9 +1228,9 @@ Screens:
                                                 Size: =10
                                                 Text: |
                                                   =Text(ThisItem.Startdatum, "[$-de-DE]dd.mm.yyyy") & " – " & Text(ThisItem.Laufzeit, "[$-de-DE]dd.mm.yyyy")
-                                                Width: =Parent.TemplateWidth - 280
+                                                Width: =Parent.TemplateWidth - 290
                                                 X: =14
-                                                Y: =30
+                                                Y: =32
                                           - grp_GroupItemPctPill:
                                               Control: GroupContainer
                                               Variant: ManualLayout
@@ -1239,8 +1244,8 @@ Screens:
                                                 RadiusBottomRight: =999
                                                 RadiusTopLeft: =999
                                                 RadiusTopRight: =999
-                                                Width: =100
-                                                X: =Parent.TemplateWidth - 116
+                                                Width: =124
+                                                X: =Parent.TemplateWidth - 138
                                                 Y: =8
                                               Children:
                                                 - lbl_GroupItemPct:
@@ -1254,7 +1259,7 @@ Screens:
                                                       Size: =11
                                                       Text: |
                                                         =RoundDown(ThisItem.Auslastung * 100, 0) & " %"
-                                                      Width: =100
+                                                      Width: =124
                                           - grp_GroupItemDiffPill:
                                               Control: GroupContainer
                                               Variant: ManualLayout
@@ -1268,8 +1273,8 @@ Screens:
                                                 RadiusBottomRight: =999
                                                 RadiusTopLeft: =999
                                                 RadiusTopRight: =999
-                                                Width: =100
-                                                X: =Parent.TemplateWidth - 116
+                                                Width: =124
+                                                X: =Parent.TemplateWidth - 138
                                                 Y: =34
                                               Children:
                                                 - lbl_GroupItemDiff:
@@ -1283,4 +1288,4 @@ Screens:
                                                       Size: =11
                                                       Text: |
                                                         ="Noch " & DateDiff(Today(), ThisItem.Laufzeit, TimeUnit.Days) & " Tage"
-                                                      Width: =100
+                                                      Width: =124
