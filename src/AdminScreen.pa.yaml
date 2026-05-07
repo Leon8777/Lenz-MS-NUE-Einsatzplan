@@ -395,7 +395,7 @@ Screens:
                                   Control: Label
                                   Properties:
                                     AlignInContainer: =AlignInContainer.Stretch
-                                    Color: =RGBA(46, 160, 67, 1)
+                                    Color: =RGBA(220, 38, 38, 1)
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Bold
                                     Height: =32
@@ -528,10 +528,10 @@ Screens:
                                         Control: GroupContainer
                                         Variant: ManualLayout
                                         Properties:
-                                          BorderColor: =RGBA(187, 230, 198, 1)
+                                          BorderColor: =RGBA(252, 165, 165, 1)
                                           BorderThickness: =1
                                           DropShadow: =DropShadow.None
-                                          Fill: =RGBA(235, 248, 238, 1)
+                                          Fill: =RGBA(254, 226, 226, 1)
                                           FillPortions: =0
                                           Height: =24
                                           LayoutMaxWidth: =88
@@ -546,7 +546,7 @@ Screens:
                                               Control: Label
                                               Properties:
                                                 Align: =Align.Center
-                                                Color: =RGBA(34, 110, 52, 1)
+                                                Color: =RGBA(185, 28, 28, 1)
                                                 Font: =Font.'Open Sans'
                                                 FontWeight: =FontWeight.Semibold
                                                 Height: =24
@@ -626,7 +626,7 @@ Screens:
                                           - rec_FKAccent:
                                               Control: Rectangle
                                               Properties:
-                                                Fill: =If(ThisItem.GesamtAuslastung >= 100, RGBA(220, 38, 38, 1), RGBA(46, 160, 67, 1))
+                                                Fill: =If(ThisItem.GesamtAuslastung >= 100, RGBA(46, 160, 67, 1), RGBA(220, 38, 38, 1))
                                                 Height: =64
                                                 Width: =4
                                     - lbl_FKMitarbeiter:
@@ -656,7 +656,7 @@ Screens:
                                         Control: GroupContainer
                                         Variant: ManualLayout
                                         Properties:
-                                          Fill: =If(ThisItem.GesamtAuslastung >= 100, RGBA(220, 38, 38, 1), RGBA(46, 160, 67, 1))
+                                          Fill: =If(ThisItem.GesamtAuslastung >= 100, RGBA(46, 160, 67, 1), RGBA(220, 38, 38, 1))
                                           Height: =28
                                           RadiusBottomLeft: =999
                                           RadiusBottomRight: =999

@@ -232,7 +232,7 @@ Screens:
                         - lbl_MyLoadPercent:
                             Control: Label
                             Properties:
-                              Color: =If(varMeineAuslastung >= 100, RGBA(220, 38, 38, 1), If(varMeineAuslastung >= 80, RGBA(217, 119, 6, 1), RGBA(0, 110, 199, 1)))
+                              Color: =If(varMeineAuslastung >= 100, RGBA(46, 160, 67, 1), RGBA(220, 38, 38, 1))
                               Font: =Font.'Open Sans'
                               FontWeight: =FontWeight.Bold
                               Height: =44
@@ -269,7 +269,7 @@ Screens:
                               - rec_MyLoadBarFill:
                                   Control: Rectangle
                                   Properties:
-                                    Fill: =If(varMeineAuslastung >= 100, RGBA(220, 38, 38, 1), If(varMeineAuslastung >= 80, RGBA(217, 119, 6, 1), RGBA(0, 110, 199, 1)))
+                                    Fill: =If(varMeineAuslastung >= 100, RGBA(46, 160, 67, 1), RGBA(220, 38, 38, 1))
                                     Height: =12
                                     Width: =Min(varMeineAuslastung, 100) / 100 * Parent.Width
                         - lbl_MyLoadBarMin:
@@ -299,10 +299,10 @@ Screens:
                             Control: GroupContainer
                             Variant: ManualLayout
                             Properties:
-                              BorderColor: =If(varMeineAuslastung >= 100, RGBA(252, 165, 165, 1), RGBA(187, 230, 198, 1))
+                              BorderColor: =If(varMeineAuslastung >= 100, RGBA(187, 230, 198, 1), RGBA(252, 165, 165, 1))
                               BorderThickness: =1
                               DropShadow: =DropShadow.None
-                              Fill: =If(varMeineAuslastung >= 100, RGBA(254, 226, 226, 1), RGBA(235, 248, 238, 1))
+                              Fill: =If(varMeineAuslastung >= 100, RGBA(235, 248, 238, 1), RGBA(254, 226, 226, 1))
                               Height: =36
                               RadiusBottomLeft: =999
                               RadiusBottomRight: =999
@@ -316,7 +316,7 @@ Screens:
                                   Control: Label
                                   Properties:
                                     Align: =Align.Center
-                                    Color: =If(varMeineAuslastung >= 100, RGBA(185, 28, 28, 1), RGBA(34, 110, 52, 1))
+                                    Color: =If(varMeineAuslastung >= 100, RGBA(34, 110, 52, 1), RGBA(185, 28, 28, 1))
                                     Font: =Font.'Open Sans'
                                     FontWeight: =FontWeight.Bold
                                     Height: =36
