@@ -637,7 +637,7 @@ Screens:
                                           FontWeight: =FontWeight.Bold
                                           Height: =22
                                           Text: =ThisItem.PersonName
-                                          Width: =Parent.TemplateWidth - 150
+                                          Width: =Parent.TemplateWidth - 380
                                           X: =18
                                           Y: =10
                                     - lbl_FKAuslastung:
@@ -649,7 +649,7 @@ Screens:
                                           Size: =11
                                           Text: |
                                             ="Aktuelle Auslastung: " & ThisItem.GesamtAuslastung & " %"
-                                          Width: =Parent.TemplateWidth - 150
+                                          Width: =Parent.TemplateWidth - 380
                                           X: =18
                                           Y: =34
                                     - grp_FKPill:
@@ -703,6 +703,31 @@ Screens:
                                           Width: =200
                                           X: =Parent.TemplateWidth - 270
                                           Y: =40
+                                    - btn_FKMail:
+                                        Control: Button
+                                        Properties:
+                                          Appearance: ='ButtonCanvas.Appearance'.Subtle
+                                          BasePaletteColor: =RGBA(220, 38, 38, 1)
+                                          BorderRadius: =8
+                                          Height: =36
+                                          Icon: ="Mail"
+                                          Layout: ='ButtonCanvas.Layout'.IconOnly
+                                          OnSelect: |-
+                                            =Office365Outlook.SendEmailV2(
+                                                ThisItem.PersonEmail,
+                                                "Erinnerung: Bitte Auslastung im MS-Nürnberg-Einsatzplan pflegen",
+                                                "<p>Hallo " & ThisItem.PersonName & ",</p>" &
+                                                "<p>aktuell ist deine Auslastung im MS-Nürnberg-Einsatzplan mit <b>" & ThisItem.GesamtAuslastung & " %</b> hinterlegt.</p>" &
+                                                "<p>Bitte trage deine aktuellen Einsätze ein, damit die FK-Auswertung valide bleibt:<br>" &
+                                                "<a href=""https://o365adessogroup.sharepoint.com/sites/MicrosoftNrnberg/Lists/MSNUEEinsatzplan/AllItems.aspx"">MS-NUE-Einsatzplan öffnen</a></p>" &
+                                                "<p>Danke!<br>Viele Grüße<br>" & varCurrentUser.FullName & "</p>",
+                                                { Importance: "High" }
+                                            );
+                                            Notify("Erinnerung an " & ThisItem.PersonName & " gesendet", NotificationType.Success)
+                                          Visible: =ThisItem.GesamtAuslastung < 100
+                                          Width: =36
+                                          X: =Parent.TemplateWidth - 360
+                                          Y: =14
                         - grp_ColAuslaufend:
                             Control: GroupContainer
                             Variant: AutoLayout
