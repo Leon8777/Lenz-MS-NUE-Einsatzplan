@@ -806,7 +806,6 @@ Screens:
                                           Font: =Font.'Open Sans'
                                           FontSize: =11
                                           InputTextPlaceholder: ="Person filtern…"
-                                          IsSearchable: =true
                                           Items: =colAuslPersons
                                           OnChange: =Set(varAuslPersonFilter, If(IsBlank(Self.Selected), "", Self.Selected.PersonEmail))
                                           Width: =220
@@ -820,6 +819,17 @@ Screens:
                                                 FieldName: ="DisplayName"
                                                 FieldType: ="s"
                                                 Order: =1
+                                    - btn_AuslPersonClear:
+                                        Control: Button
+                                        Properties:
+                                          Appearance: ='ButtonCanvas.Appearance'.Subtle
+                                          BasePaletteColor: =RGBA(100, 116, 139, 1)
+                                          Height: =32
+                                          Icon: ="Cancel"
+                                          Layout: ='ButtonCanvas.Layout'.IconOnly
+                                          OnSelect: =Set(varAuslPersonFilter, ""); Reset(cmb_AuslPerson)
+                                          Visible: =!IsBlank(varAuslPersonFilter)
+                                          Width: =32
                                     - grp_AuslCountPill:
                                         Control: GroupContainer
                                         Variant: ManualLayout
