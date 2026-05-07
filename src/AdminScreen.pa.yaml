@@ -1236,7 +1236,7 @@ Screens:
                                           Text: |-
                                             =ThisItem.Kunde & " / (PL: " & ThisItem.PLName & ")"
                                           Visible: =ThisItem.RowType = "Item"
-                                          Width: =Parent.TemplateWidth - 290
+                                          Width: =Parent.TemplateWidth - 200
                                           X: =22
                                           Y: =10
                                     - lbl_FlatItemEnde:
