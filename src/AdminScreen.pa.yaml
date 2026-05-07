@@ -124,7 +124,32 @@ Screens:
             )
         );
         // Toggle fuer die Einsatz-Liste: "Auslaufend" = Top 10 nach Laufzeit, "Alle" = alle aktiven Einsaetze sortiert nach Person
-        Set(varAuslFilter, "Auslaufend")
+        Set(varAuslFilter, "Auslaufend");
+        // Personen-Filter fuer Auslaufende-Liste: leer = "Alle Personen"
+        Set(varAuslPersonFilter, "");
+        // Personen-Liste fuer cmb_AuslPerson (Distinct aus laufenden Eintraegen, alphabetisch).
+        // Ausgeschlossene E-Mails / Namen werden nicht in die Liste aufgenommen.
+        ClearCollect(
+            colAuslPersons,
+            Sort(
+                ForAll(
+                    Distinct(
+                        Filter(
+                            colLaufendeEintraege,
+                            IsBlank(LookUp(varExcludedEmails, Lower(Value) = Lower(Person.Email))) And
+                            IsBlank(LookUp(varExcludedNames, Lower(Value) = Lower(Person.DisplayName)))
+                        ),
+                        Person.DisplayName
+                    ) As p,
+                    {
+                        DisplayName: p.Value,
+                        PersonEmail: Lower(LookUp(colLaufendeEintraege, Person.DisplayName = p.Value).Person.Email)
+                    }
+                ),
+                DisplayName,
+                SortOrder.Ascending
+            )
+        )
     Children:
       - grp_AdminRoot:
           Control: GroupContainer
@@ -234,7 +259,8 @@ Screens:
                                 ClearCollect(colAlleUser, Filter(colGroupMembers, !IsBlank(PersonEmail) And Len(PersonEmail) > 0 And IsBlank(LookUp(varExcludedEmails, Lower(Value) = PersonEmail)) And IsBlank(LookUp(varExcludedNames, Lower(Value) = Lower(PersonName)))));
                                 ClearCollect(colAuslastungProMA, AddColumns(GroupBy(colAktiveFlat, PersonEmail, PersonName, Eintraege), GesamtAuslastung, RoundDown(Sum(Eintraege, AuslastungPct), 0), FreieKapa, 100 - RoundDown(Sum(Eintraege, AuslastungPct), 0), GesamtVorher, RoundDown(Sum(Eintraege, AuslastungVorherPct), 0), FreieKapaVorher, 100 - RoundDown(Sum(Eintraege, AuslastungVorherPct), 0), StandModified, Max(Eintraege, Modified)));
                                 ClearCollect(colFreieKapa, Filter(ForAll(colAlleUser As u, With({aus: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtAuslastung), 0), vorher: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtVorher), 0), stand: LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, StandModified)}, {PersonName: u.PersonName, PersonEmail: u.PersonEmail, PersonSurname: u.PersonSurname, GesamtAuslastung: aus, FreieKapa: 100 - aus, GesamtVorher: vorher, FreieKapaVorher: 100 - vorher, StandModified: stand})), GesamtAuslastung < 100));
-                                ClearCollect(colAlleKapa, ForAll(colAlleUser As u, With({aus: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtAuslastung), 0), vorher: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtVorher), 0), stand: LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, StandModified)}, {PersonName: u.PersonName, PersonEmail: u.PersonEmail, PersonSurname: u.PersonSurname, GesamtAuslastung: aus, FreieKapa: 100 - aus, GesamtVorher: vorher, FreieKapaVorher: 100 - vorher, StandModified: stand})))
+                                ClearCollect(colAlleKapa, ForAll(colAlleUser As u, With({aus: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtAuslastung), 0), vorher: Coalesce(LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, GesamtVorher), 0), stand: LookUp(colAuslastungProMA, PersonEmail = u.PersonEmail, StandModified)}, {PersonName: u.PersonName, PersonEmail: u.PersonEmail, PersonSurname: u.PersonSurname, GesamtAuslastung: aus, FreieKapa: 100 - aus, GesamtVorher: vorher, FreieKapaVorher: 100 - vorher, StandModified: stand})));
+                                ClearCollect(colAuslPersons, Sort(ForAll(Distinct(Filter(colLaufendeEintraege, IsBlank(LookUp(varExcludedEmails, Lower(Value) = Lower(Person.Email))) And IsBlank(LookUp(varExcludedNames, Lower(Value) = Lower(Person.DisplayName)))), Person.DisplayName) As p, {DisplayName: p.Value, PersonEmail: Lower(LookUp(colLaufendeEintraege, Person.DisplayName = p.Value).Person.Email)}), DisplayName, SortOrder.Ascending))
                               Text: ="Aktualisieren"
                               Width: =128
                   - rec_AdminHeaderAccent:
@@ -773,6 +799,27 @@ Screens:
                                           FontWeight: =FontWeight.Bold
                                           Size: =14
                                           Text: =Switch(varAuslFilter, "Alle", "Alle Einsaetze", "Auslaufende Projekte")
+                                    - cmb_AuslPerson:
+                                        Control: ComboBox
+                                        Properties:
+                                          Appearance: ='ComboboxCanvas.Appearance'.Outline
+                                          Font: =Font.'Open Sans'
+                                          FontSize: =11
+                                          InputTextPlaceholder: ="Person filtern…"
+                                          IsSearchable: =true
+                                          Items: =colAuslPersons
+                                          OnChange: =Set(varAuslPersonFilter, If(IsBlank(Self.Selected), "", Self.Selected.PersonEmail))
+                                          Width: =220
+                                        Children:
+                                          - dfl_AuslPersonName:
+                                              Control: ComboBoxDataField
+                                              Variant: textualColumn
+                                              IsLocked: true
+                                              Properties:
+                                                FieldDisplayName: ="DisplayName"
+                                                FieldName: ="DisplayName"
+                                                FieldType: ="s"
+                                                Order: =1
                                     - grp_AuslCountPill:
                                         Control: GroupContainer
                                         Variant: ManualLayout
@@ -849,7 +896,7 @@ Screens:
                                   Properties:
                                     Fill: =RGBA(255, 255, 255, 1)
                                     Height: =Parent.Height - 98
-                                    Items: =Filter(If(varAuslFilter = "Alle", Sort(Filter('MS-NUE-Einsatzplan', Laufzeit >= Today()), Person.DisplayName), SortByColumns(Filter('MS-NUE-Einsatzplan', Laufzeit >= Today()), "Laufzeit", SortOrder.Ascending)), IsBlank(LookUp(varExcludedEmails, Lower(Value) = Lower(Person.Email))) And IsBlank(LookUp(varExcludedNames, Lower(Value) = Lower(Person.DisplayName))))
+                                    Items: =Filter(If(varAuslFilter = "Alle", Sort(Filter('MS-NUE-Einsatzplan', Laufzeit >= Today()), Person.DisplayName), SortByColumns(Filter('MS-NUE-Einsatzplan', Laufzeit >= Today()), "Laufzeit", SortOrder.Ascending)), IsBlank(LookUp(varExcludedEmails, Lower(Value) = Lower(Person.Email))) And IsBlank(LookUp(varExcludedNames, Lower(Value) = Lower(Person.DisplayName))) And (IsBlank(varAuslPersonFilter) Or Lower(Person.Email) = varAuslPersonFilter))
                                     LayoutMinHeight: =320
                                     TemplatePadding: =4
                                     TemplateSize: =82
