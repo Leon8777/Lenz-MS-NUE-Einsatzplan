@@ -718,10 +718,9 @@ Screens:
                                                 "Erinnerung: Bitte Auslastung im MS-Nürnberg-Einsatzplan pflegen",
                                                 "<p>Hallo " & ThisItem.PersonName & ",</p>" &
                                                 "<p>aktuell ist deine Auslastung im MS-Nürnberg-Einsatzplan mit <b>" & ThisItem.GesamtAuslastung & " %</b> hinterlegt.</p>" &
-                                                "<p>Bitte trage deine aktuellen Einsätze ein, damit die FK-Auswertung valide bleibt:<br>" &
-                                                "<a href=""https://o365adessogroup.sharepoint.com/sites/MicrosoftNrnberg/Lists/MSNUEEinsatzplan/AllItems.aspx"">MS-NUE-Einsatzplan öffnen</a></p>" &
-                                                "<p>Danke!<br>Viele Grüße<br>" & varCurrentUser.FullName & "</p>",
-                                                { Importance: "High" }
+                                                "<p>Bitte trage deine aktuellen Einsätze ein:<br>" &
+                                                "<a href=""https://apps.powerapps.com/play/e/default-3d355765-67d9-47cd-9c7a-bf31179f56eb/a/a4944697-fadc-4a92-ad75-ad2b25469d22?tenantId=3d355765-67d9-47cd-9c7a-bf31179f56eb&hint=1b90d0ec-ba05-4005-8833-61cfc1152adf&sourcetime=1778142531117"">MS-NUE-Einsatzplan öffnen</a></p>" &
+                                                "<p>Danke!<br>Viele Grüße<br>" & varCurrentUser.FullName & "</p>"
                                             );
                                             Notify("Erinnerung an " & ThisItem.PersonName & " gesendet", NotificationType.Success)
                                           Visible: =ThisItem.GesamtAuslastung < 100
