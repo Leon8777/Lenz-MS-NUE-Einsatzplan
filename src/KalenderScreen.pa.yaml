@@ -118,8 +118,8 @@ Screens:
                               LayoutDirection: =LayoutDirection.Horizontal
                               LayoutGap: =10
                               LayoutMinHeight: =24
-                              LayoutMinWidth: =440
-                              Width: =440
+                              LayoutMinWidth: =490
+                              Width: =490
                             Children:
                               - grp_KalLegendG:
                                   Control: GroupContainer
@@ -132,8 +132,8 @@ Screens:
                                     LayoutDirection: =LayoutDirection.Horizontal
                                     LayoutGap: =4
                                     LayoutMinHeight: =20
-                                    LayoutMinWidth: =60
-                                    Width: =80
+                                    LayoutMinWidth: =90
+                                    Width: =90
                                   Children:
                                     - rec_KalLegendG:
                                         Control: Rectangle
@@ -150,7 +150,7 @@ Screens:
                                           Height: =20
                                           Size: =10
                                           Text: =">80%"
-                                          Width: =40
+                                          Width: =60
                               - grp_KalLegendGY:
                                   Control: GroupContainer
                                   Variant: AutoLayout
@@ -162,8 +162,8 @@ Screens:
                                     LayoutDirection: =LayoutDirection.Horizontal
                                     LayoutGap: =4
                                     LayoutMinHeight: =20
-                                    LayoutMinWidth: =60
-                                    Width: =80
+                                    LayoutMinWidth: =90
+                                    Width: =90
                                   Children:
                                     - rec_KalLegendGY:
                                         Control: Rectangle
@@ -180,7 +180,7 @@ Screens:
                                           Height: =20
                                           Size: =10
                                           Text: =">60%"
-                                          Width: =34
+                                          Width: =60
                               - grp_KalLegendY:
                                   Control: GroupContainer
                                   Variant: AutoLayout
@@ -192,8 +192,8 @@ Screens:
                                     LayoutDirection: =LayoutDirection.Horizontal
                                     LayoutGap: =4
                                     LayoutMinHeight: =20
-                                    LayoutMinWidth: =60
-                                    Width: =80
+                                    LayoutMinWidth: =90
+                                    Width: =90
                                   Children:
                                     - rec_KalLegendY:
                                         Control: Rectangle
@@ -210,7 +210,7 @@ Screens:
                                           Height: =20
                                           Size: =10
                                           Text: =">40%"
-                                          Width: =34
+                                          Width: =60
                               - grp_KalLegendO:
                                   Control: GroupContainer
                                   Variant: AutoLayout
@@ -222,8 +222,8 @@ Screens:
                                     LayoutDirection: =LayoutDirection.Horizontal
                                     LayoutGap: =4
                                     LayoutMinHeight: =20
-                                    LayoutMinWidth: =60
-                                    Width: =80
+                                    LayoutMinWidth: =90
+                                    Width: =90
                                   Children:
                                     - rec_KalLegendO:
                                         Control: Rectangle
@@ -240,7 +240,7 @@ Screens:
                                           Height: =20
                                           Size: =10
                                           Text: =">20%"
-                                          Width: =34
+                                          Width: =60
                               - grp_KalLegendR:
                                   Control: GroupContainer
                                   Variant: AutoLayout
@@ -252,8 +252,8 @@ Screens:
                                     LayoutDirection: =LayoutDirection.Horizontal
                                     LayoutGap: =4
                                     LayoutMinHeight: =20
-                                    LayoutMinWidth: =60
-                                    Width: =80
+                                    LayoutMinWidth: =90
+                                    Width: =90
                                   Children:
                                     - rec_KalLegendR:
                                         Control: Rectangle
@@ -270,7 +270,7 @@ Screens:
                                           Height: =20
                                           Size: =10
                                           Text: ="≤20%"
-                                          Width: =34
+                                          Width: =60
                   - rec_KalHeaderAccent:
                       Control: Rectangle
                       Properties:
