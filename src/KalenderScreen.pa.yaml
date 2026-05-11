@@ -101,12 +101,12 @@ Screens:
                             Control: Label
                             Properties:
                               Color: =RGBA(255, 255, 255, 1)
-                              FillPortions: =1
                               Font: =Font.'Open Sans'
                               FontWeight: =FontWeight.Bold
                               Height: =32
                               Size: =16
                               Text: ="Auslastungs-Kalender (26 Wochen)"
+                              Width: =500
                         - grp_KalLegend:
                             Control: GroupContainer
                             Variant: AutoLayout
@@ -118,8 +118,8 @@ Screens:
                               LayoutDirection: =LayoutDirection.Horizontal
                               LayoutGap: =10
                               LayoutMinHeight: =24
-                              LayoutMinWidth: =340
-                              Width: =340
+                              LayoutMinWidth: =440
+                              Width: =440
                             Children:
                               - grp_KalLegendG:
                                   Control: GroupContainer
@@ -133,7 +133,7 @@ Screens:
                                     LayoutGap: =4
                                     LayoutMinHeight: =20
                                     LayoutMinWidth: =60
-                                    Width: =60
+                                    Width: =80
                                   Children:
                                     - rec_KalLegendG:
                                         Control: Rectangle
@@ -150,7 +150,7 @@ Screens:
                                           Height: =20
                                           Size: =10
                                           Text: =">80%"
-                                          Width: =34
+                                          Width: =40
                               - grp_KalLegendGY:
                                   Control: GroupContainer
                                   Variant: AutoLayout
@@ -163,7 +163,7 @@ Screens:
                                     LayoutGap: =4
                                     LayoutMinHeight: =20
                                     LayoutMinWidth: =60
-                                    Width: =60
+                                    Width: =80
                                   Children:
                                     - rec_KalLegendGY:
                                         Control: Rectangle
@@ -193,7 +193,7 @@ Screens:
                                     LayoutGap: =4
                                     LayoutMinHeight: =20
                                     LayoutMinWidth: =60
-                                    Width: =60
+                                    Width: =80
                                   Children:
                                     - rec_KalLegendY:
                                         Control: Rectangle
@@ -223,7 +223,7 @@ Screens:
                                     LayoutGap: =4
                                     LayoutMinHeight: =20
                                     LayoutMinWidth: =60
-                                    Width: =60
+                                    Width: =80
                                   Children:
                                     - rec_KalLegendO:
                                         Control: Rectangle
@@ -253,7 +253,7 @@ Screens:
                                     LayoutGap: =4
                                     LayoutMinHeight: =20
                                     LayoutMinWidth: =60
-                                    Width: =60
+                                    Width: =80
                                   Children:
                                     - rec_KalLegendR:
                                         Control: Rectangle
