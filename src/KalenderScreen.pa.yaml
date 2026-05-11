@@ -106,7 +106,7 @@ Screens:
                               Height: =32
                               Size: =16
                               Text: ="Auslastungs-Kalender (26 Wochen)"
-                              Width: =500
+                              Width: =800
                         - grp_KalLegend:
                             Control: GroupContainer
                             Variant: AutoLayout
