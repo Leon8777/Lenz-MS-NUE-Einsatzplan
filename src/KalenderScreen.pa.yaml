@@ -118,6 +118,8 @@ Screens:
                               LayoutDirection: =LayoutDirection.Horizontal
                               LayoutGap: =10
                               LayoutMinHeight: =24
+                              LayoutMinWidth: =340
+                              Width: =340
                             Children:
                               - grp_KalLegendG:
                                   Control: GroupContainer
@@ -130,7 +132,8 @@ Screens:
                                     LayoutDirection: =LayoutDirection.Horizontal
                                     LayoutGap: =4
                                     LayoutMinHeight: =20
-                                    LayoutMinWidth: =56
+                                    LayoutMinWidth: =60
+                                    Width: =60
                                   Children:
                                     - rec_KalLegendG:
                                         Control: Rectangle
@@ -159,7 +162,8 @@ Screens:
                                     LayoutDirection: =LayoutDirection.Horizontal
                                     LayoutGap: =4
                                     LayoutMinHeight: =20
-                                    LayoutMinWidth: =56
+                                    LayoutMinWidth: =60
+                                    Width: =60
                                   Children:
                                     - rec_KalLegendGY:
                                         Control: Rectangle
@@ -188,7 +192,8 @@ Screens:
                                     LayoutDirection: =LayoutDirection.Horizontal
                                     LayoutGap: =4
                                     LayoutMinHeight: =20
-                                    LayoutMinWidth: =56
+                                    LayoutMinWidth: =60
+                                    Width: =60
                                   Children:
                                     - rec_KalLegendY:
                                         Control: Rectangle
@@ -217,7 +222,8 @@ Screens:
                                     LayoutDirection: =LayoutDirection.Horizontal
                                     LayoutGap: =4
                                     LayoutMinHeight: =20
-                                    LayoutMinWidth: =56
+                                    LayoutMinWidth: =60
+                                    Width: =60
                                   Children:
                                     - rec_KalLegendO:
                                         Control: Rectangle
@@ -246,7 +252,8 @@ Screens:
                                     LayoutDirection: =LayoutDirection.Horizontal
                                     LayoutGap: =4
                                     LayoutMinHeight: =20
-                                    LayoutMinWidth: =56
+                                    LayoutMinWidth: =60
+                                    Width: =60
                                   Children:
                                     - rec_KalLegendR:
                                         Control: Rectangle
