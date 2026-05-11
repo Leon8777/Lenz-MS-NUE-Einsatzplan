@@ -130,6 +130,7 @@ Screens:
                                     LayoutDirection: =LayoutDirection.Horizontal
                                     LayoutGap: =4
                                     LayoutMinHeight: =20
+                                    LayoutMinWidth: =56
                                   Children:
                                     - rec_KalLegendG:
                                         Control: Rectangle
@@ -146,6 +147,7 @@ Screens:
                                           Height: =20
                                           Size: =10
                                           Text: =">80%"
+                                          Width: =34
                               - grp_KalLegendGY:
                                   Control: GroupContainer
                                   Variant: AutoLayout
@@ -157,6 +159,7 @@ Screens:
                                     LayoutDirection: =LayoutDirection.Horizontal
                                     LayoutGap: =4
                                     LayoutMinHeight: =20
+                                    LayoutMinWidth: =56
                                   Children:
                                     - rec_KalLegendGY:
                                         Control: Rectangle
@@ -173,6 +176,7 @@ Screens:
                                           Height: =20
                                           Size: =10
                                           Text: =">60%"
+                                          Width: =34
                               - grp_KalLegendY:
                                   Control: GroupContainer
                                   Variant: AutoLayout
@@ -184,6 +188,7 @@ Screens:
                                     LayoutDirection: =LayoutDirection.Horizontal
                                     LayoutGap: =4
                                     LayoutMinHeight: =20
+                                    LayoutMinWidth: =56
                                   Children:
                                     - rec_KalLegendY:
                                         Control: Rectangle
@@ -200,6 +205,7 @@ Screens:
                                           Height: =20
                                           Size: =10
                                           Text: =">40%"
+                                          Width: =34
                               - grp_KalLegendO:
                                   Control: GroupContainer
                                   Variant: AutoLayout
@@ -211,6 +217,7 @@ Screens:
                                     LayoutDirection: =LayoutDirection.Horizontal
                                     LayoutGap: =4
                                     LayoutMinHeight: =20
+                                    LayoutMinWidth: =56
                                   Children:
                                     - rec_KalLegendO:
                                         Control: Rectangle
@@ -227,6 +234,7 @@ Screens:
                                           Height: =20
                                           Size: =10
                                           Text: =">20%"
+                                          Width: =34
                               - grp_KalLegendR:
                                   Control: GroupContainer
                                   Variant: AutoLayout
@@ -238,6 +246,7 @@ Screens:
                                     LayoutDirection: =LayoutDirection.Horizontal
                                     LayoutGap: =4
                                     LayoutMinHeight: =20
+                                    LayoutMinWidth: =56
                                   Children:
                                     - rec_KalLegendR:
                                         Control: Rectangle
@@ -254,6 +263,7 @@ Screens:
                                           Height: =20
                                           Size: =10
                                           Text: ="≤20%"
+                                          Width: =34
                   - rec_KalHeaderAccent:
                       Control: Rectangle
                       Properties:
